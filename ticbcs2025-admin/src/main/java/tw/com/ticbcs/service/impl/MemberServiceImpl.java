@@ -300,7 +300,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		// 設定 基本資料
 		addOrdersItemDTO.setOrdersId(ordersId);
 		addOrdersItemDTO.setProductType("Registration Fee");
-		addOrdersItemDTO.setProductName("2025 TOPBS Registration Fee");
+		addOrdersItemDTO.setProductName("2025 TICBCS Registration Fee");
 
 		// 設定 單價、數量、小計
 		addOrdersItemDTO.setUnitPrice(BigDecimal.ZERO);
@@ -423,7 +423,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		// 設定 基本資料
 		addOrdersItemDTO.setOrdersId(ordersId);
 		addOrdersItemDTO.setProductType("Registration Fee");
-		addOrdersItemDTO.setProductName("2025 TOPBS Registration Fee");
+		addOrdersItemDTO.setProductName("2025 TICBCS Registration Fee");
 
 		// 設定 單價、數量、小計
 		addOrdersItemDTO.setUnitPrice(amount);
@@ -464,7 +464,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 					       			</td>
 					   			</tr>
 								<tr>
-									<td style="font-size:2rem;">Welcome to 2025 TOPBS & IOBPS !</td>
+									<td style="font-size:2rem;">Welcome to 2025 TICBCS !</td>
 								</tr>
 								<tr>
 									<td>We are pleased to inform you that your registration has been successfully completed.</td>
@@ -510,7 +510,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 						addMemberDTO.getAffiliation(), addMemberDTO.getJobTitle(), addMemberDTO.getPhone(),
 						categoryString);
 
-		String plainTextContent = "Welcome to 2025 TOPBS & IOBPS !\n"
+		String plainTextContent = "Welcome to 2025 TICBCS !\n"
 				+ "Your registration has been successfully completed.\n" + "Your registration details are as follows:\n"
 				+ "First Name: " + addMemberDTO.getFirstName() + "\n" + "Last Name: " + addMemberDTO.getLastName()
 				+ "\n" + "Country: " + addMemberDTO.getCountry() + "\n" + "Affiliation: "
@@ -520,7 +520,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 				+ "If you have any questions, feel free to contact us. We look forward to seeing you at the conference!";
 
 		// 透過異步工作去寄送郵件
-		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "2025 TOPBS & IOPBS  Registration Successful",
+		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "2025 TICBCS Registration Successful",
 				htmlContent, plainTextContent);
 
 		// 之後應該要以這個會員ID 產生Token 回傳前端，讓他直接進入登入狀態
@@ -615,7 +615,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 				// 設定 基本資料
 				addOrdersItemDTO.setOrdersId(ordersId);
 				addOrdersItemDTO.setProductType("Registration Fee");
-				addOrdersItemDTO.setProductName("2025 TOPBS Group Registration Fee");
+				addOrdersItemDTO.setProductName("2025 TICBCS Group Registration Fee");
 
 				// 設定 單價、數量、小計
 				addOrdersItemDTO.setUnitPrice(BigDecimal.ZERO);
@@ -653,7 +653,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		// 設定 基本資料
 		addOrdersItemDTO.setOrdersId(ordersId);
 		addOrdersItemDTO.setProductType("Registration Fee");
-		addOrdersItemDTO.setProductName("2025 TOPBS Group Registration Fee");
+		addOrdersItemDTO.setProductName("2025 TICBCS Group Registration Fee");
 
 		// 設定 單價、數量、小計
 		addOrdersItemDTO.setUnitPrice(discountedTotalFee);

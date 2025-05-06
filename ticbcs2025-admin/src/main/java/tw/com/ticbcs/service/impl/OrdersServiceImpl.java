@@ -147,7 +147,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
 
 		// 設定交易描述
 		aioCheckOutOneTime.setTradeDesc(
-				"This payment page only displays the total order amount. For details, please see the TOPBS2025 official website membership page, TOPPS 2025 registration fee");
+				"This payment page only displays the total order amount. For details, please see the TICBCS2025 official website membership page, TICBCS 2025 registration fee");
 		// 設定交易產品名稱概要,他沒有辦法一個item對應一個amount , 但可以透過#將item分段顯示
 		// 例如: item01#item02#item03
 		aioCheckOutOneTime.setItemName(orders.getItemsSummary());
@@ -176,8 +176,8 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
 		long timestamp = System.currentTimeMillis();
 		// 每次請求自增，並限制在 0~99 之間
 		int count = counter.getAndIncrement() % 100;
-		// 最後開頭用topbs + 時間戳 + 自增數
-		return "topbs" + timestamp + String.format("%02d", count); // 生成交易编号
+		// 最後開頭用ticbc + 時間戳 + 自增數
+		return "ticbc" + timestamp + String.format("%02d", count); // 生成交易编号
 	}
 
 }

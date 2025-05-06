@@ -105,7 +105,7 @@ public class AsyncServiceImpl implements AsyncService {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
 			helper.setTo(member.getEmail());
-			helper.setSubject("2025 TOPBS & IOPBS Group Registration Successful");
+			helper.setSubject("2025 TICBCS Group Registration Successful");
 
 			String categoryString;
 			switch (member.getCategory()) {
@@ -136,7 +136,7 @@ public class AsyncServiceImpl implements AsyncService {
 					       				</td>
 					   				</tr>
 									<tr>
-										<td style="font-size:2rem;">Welcome to 2025 TOPBS & IOBPS !</td>
+										<td style="font-size:2rem;">Welcome to 2025 TICBCS !</td>
 									</tr>
 									<tr>
 										<td>We are pleased to inform you that your registration has been successfully completed.</td>
@@ -190,7 +190,7 @@ public class AsyncServiceImpl implements AsyncService {
 					.formatted(member.getFirstName(), member.getLastName(), member.getCountry(),
 							member.getAffiliation(), member.getJobTitle(), member.getPhone(), categoryString,member.getEmail(),member.getPassword());
 
-			String plainTextContent = "Welcome to 2025 TOPBS & IOBPS !\n"
+			String plainTextContent = "Welcome to 2025 TICBCS !\n"
 					+ "Your Group registration has been successfully completed.\n"
 					+ "Your registration details are as follows:\n" + "First Name: " + member.getFirstName() + "\n"
 					+ "Last Name: " + member.getLastName() + "\n" + "Country: " + member.getCountry() + "\n"
