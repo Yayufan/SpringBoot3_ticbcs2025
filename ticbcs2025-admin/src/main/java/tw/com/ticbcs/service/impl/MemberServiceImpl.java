@@ -35,6 +35,7 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.MemberConvert;
+import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.exception.AccountPasswordWrongException;
 import tw.com.ticbcs.exception.EmailException;
 import tw.com.ticbcs.exception.ForgetPasswordException;
@@ -56,6 +57,7 @@ import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddMemberDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddOrdersDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddOrdersItemDTO;
+import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
 import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutMemberDTO;
 import tw.com.ticbcs.pojo.VO.MemberOrderVO;
 import tw.com.ticbcs.pojo.VO.MemberTagVO;
@@ -70,8 +72,10 @@ import tw.com.ticbcs.saToken.StpKit;
 import tw.com.ticbcs.service.AsyncService;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.MemberService;
+import tw.com.ticbcs.service.MemberTagService;
 import tw.com.ticbcs.service.OrdersItemService;
 import tw.com.ticbcs.service.OrdersService;
+import tw.com.ticbcs.service.TagService;
 
 @Service
 @RequiredArgsConstructor
@@ -82,7 +86,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 	private static final String ITEMS_SUMMARY_REGISTRATION = "Registration Fee";
 	private static final String GROUP_ITEMS_SUMMARY_REGISTRATION = "Group Registration Fee";
 	private static final String NATIONALITY_DOMESTIC = "Taiwan";
-	
+
 	private final MemberConvert memberConvert;
 	private final OrdersService ordersService;
 	private final OrdersMapper ordersMapper;
@@ -94,6 +98,10 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 
 	private final AsyncService asyncService;
 	private final AttendeesService attendeesService;
+	private final TagService tagService;
+	private final TagConvert tagConvert;
+
+	private final MemberTagService memberTagService;
 
 	//redLockClient01  businessRedissonClient
 	@Qualifier("businessRedissonClient")
@@ -338,61 +346,61 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		//BigDecimal amount = null;
 		BigDecimal amount = BigDecimal.ZERO;
 		// 處於早鳥優惠
-//		if (!now.isAfter(setting.getEarlyBirdDiscountPhaseOneDeadline())) {
-//
-//			if (isTaiwan) {
-//				// 他是台灣人，當前時間處於早鳥優惠，金額變動
-//				amount = switch (addMemberDTO.getCategory()) {
-//				// Member(會員) 的註冊費價格
-//				case 1 -> BigDecimal.valueOf(700L);
-//				// Others(學生或護士) 的註冊費價格
-//				case 2 -> BigDecimal.valueOf(600L);
-//				// Non-Member(非會員) 的註冊費價格
-//				case 3 -> BigDecimal.valueOf(1000L);
-//				default -> throw new RegistrationInfoException("category is not in system");
-//				};
-//			} else {
-//				// 他是外國人，當前時間處於早鳥優惠，金額變動
-//				amount = switch (addMemberDTO.getCategory()) {
-//				// Member 的註冊費價格
-//				case 1 -> BigDecimal.valueOf(9600L);
-//				// Others 的註冊費價格
-//				case 2 -> BigDecimal.valueOf(4800L);
-//				// Non-member的註冊費價格
-//				case 3 -> BigDecimal.valueOf(12800L);
-//				default -> throw new RegistrationInfoException("category is not in system");
-//				};
-//			}
-//
-//		} else if (
-//		// 時間比早鳥優惠時間晚 但比截止時間早，處於一般時間
-//		now.isAfter(setting.getEarlyBirdDiscountPhaseOneDeadline())
-//				&& now.isBefore(setting.getLastRegistrationTime())) {
-//			// 早鳥結束但尚未截止
-//			if (isTaiwan) {
-//				// 他是台灣人，當前時間處於一般時間，金額變動
-//				amount = switch (addMemberDTO.getCategory()) {
-//				// Member(會員) 的註冊費價格
-//				case 1 -> BigDecimal.valueOf(1000L);
-//				// Others(學生或護士) 的註冊費價格
-//				case 2 -> BigDecimal.valueOf(1200L);
-//				// Non-Member(非會員) 的註冊費價格
-//				case 3 -> BigDecimal.valueOf(1500L);
-//				default -> throw new RegistrationInfoException("category is not in system");
-//				};
-//			} else {
-//				// 他是外國人，當前時間處於一般時間，金額變動
-//				amount = switch (addMemberDTO.getCategory()) {
-//				// Member 的註冊費價格
-//				case 1 -> BigDecimal.valueOf(12800L);
-//				// Others 的註冊費價格
-//				case 2 -> BigDecimal.valueOf(6400L);
-//				// Non-member的註冊費價格
-//				case 3 -> BigDecimal.valueOf(16000L);
-//				default -> throw new RegistrationInfoException("category is not in system");
-//				};
-//			}
-//		}
+		//		if (!now.isAfter(setting.getEarlyBirdDiscountPhaseOneDeadline())) {
+		//
+		//			if (isTaiwan) {
+		//				// 他是台灣人，當前時間處於早鳥優惠，金額變動
+		//				amount = switch (addMemberDTO.getCategory()) {
+		//				// Member(會員) 的註冊費價格
+		//				case 1 -> BigDecimal.valueOf(700L);
+		//				// Others(學生或護士) 的註冊費價格
+		//				case 2 -> BigDecimal.valueOf(600L);
+		//				// Non-Member(非會員) 的註冊費價格
+		//				case 3 -> BigDecimal.valueOf(1000L);
+		//				default -> throw new RegistrationInfoException("category is not in system");
+		//				};
+		//			} else {
+		//				// 他是外國人，當前時間處於早鳥優惠，金額變動
+		//				amount = switch (addMemberDTO.getCategory()) {
+		//				// Member 的註冊費價格
+		//				case 1 -> BigDecimal.valueOf(9600L);
+		//				// Others 的註冊費價格
+		//				case 2 -> BigDecimal.valueOf(4800L);
+		//				// Non-member的註冊費價格
+		//				case 3 -> BigDecimal.valueOf(12800L);
+		//				default -> throw new RegistrationInfoException("category is not in system");
+		//				};
+		//			}
+		//
+		//		} else if (
+		//		// 時間比早鳥優惠時間晚 但比截止時間早，處於一般時間
+		//		now.isAfter(setting.getEarlyBirdDiscountPhaseOneDeadline())
+		//				&& now.isBefore(setting.getLastRegistrationTime())) {
+		//			// 早鳥結束但尚未截止
+		//			if (isTaiwan) {
+		//				// 他是台灣人，當前時間處於一般時間，金額變動
+		//				amount = switch (addMemberDTO.getCategory()) {
+		//				// Member(會員) 的註冊費價格
+		//				case 1 -> BigDecimal.valueOf(1000L);
+		//				// Others(學生或護士) 的註冊費價格
+		//				case 2 -> BigDecimal.valueOf(1200L);
+		//				// Non-Member(非會員) 的註冊費價格
+		//				case 3 -> BigDecimal.valueOf(1500L);
+		//				default -> throw new RegistrationInfoException("category is not in system");
+		//				};
+		//			} else {
+		//				// 他是外國人，當前時間處於一般時間，金額變動
+		//				amount = switch (addMemberDTO.getCategory()) {
+		//				// Member 的註冊費價格
+		//				case 1 -> BigDecimal.valueOf(12800L);
+		//				// Others 的註冊費價格
+		//				case 2 -> BigDecimal.valueOf(6400L);
+		//				// Non-member的註冊費價格
+		//				case 3 -> BigDecimal.valueOf(16000L);
+		//				default -> throw new RegistrationInfoException("category is not in system");
+		//				};
+		//			}
+		//		}
 
 		// 首先新增這個會員資料
 		Member currentMember = memberConvert.addDTOToEntity(addMemberDTO);
@@ -495,32 +503,67 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 						</body>
 					</html>
 					"""
-				.formatted(addMemberDTO.getChineseName(),addMemberDTO.getAffiliation(), addMemberDTO.getJobTitle(), addMemberDTO.getPhone());
+				.formatted(addMemberDTO.getChineseName(), addMemberDTO.getAffiliation(), addMemberDTO.getJobTitle(),
+						addMemberDTO.getPhone());
 
-		String plainTextContent = "歡迎參加 2025 TICBCS !\n"
-				+ "我們很高興通知您，您的報名已成功完成。\n"
-				+ "您的報名資料如下：\n"
-				+ "姓名: " + addMemberDTO.getChineseName() + "\n"
-				+ "服務單位: " + addMemberDTO.getAffiliation() + "\n"
-				+ "職稱: " + addMemberDTO.getJobTitle() + "\n"
-				+ "電話: " + addMemberDTO.getPhone() + "\n"
+		String plainTextContent = "歡迎參加 2025 TICBCS !\n" + "我們很高興通知您，您的報名已成功完成。\n" + "您的報名資料如下：\n" + "姓名: "
+				+ addMemberDTO.getChineseName() + "\n" + "服務單位: " + addMemberDTO.getAffiliation() + "\n" + "職稱: "
+				+ addMemberDTO.getJobTitle() + "\n" + "電話: " + addMemberDTO.getPhone() + "\n"
 				+ "若有任何問題，歡迎隨時與我們聯繫。我們期待與您會面！";
 
 		// 透過異步工作去寄送郵件
-		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "2025 TICBCS Registration Successful",
-				htmlContent, plainTextContent);
-		
+		//		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "2025 TICBCS Registration Successful", htmlContent,
+		//				plainTextContent);
+
 		//----------------------------------------------------
-		
+
 		// 這邊比較特殊，因為是不用收款的狀態，所以直接去觸發新增進與會者名單
 		AddAttendeesDTO addAttendeesDTO = new AddAttendeesDTO();
 		addAttendeesDTO.setEmail(addMemberDTO.getEmail());
-		addAttendeesDTO.setMemberId(memberCount);
+		addAttendeesDTO.setMemberId(currentMember.getMemberId());
 		attendeesService.addAfterPayment(addAttendeesDTO);
-		
-		// 這邊直接實踐，每200名會員設置一個tag, M-group-01
-		
-		
+
+		//每200名會員設置一個tag, M-group-01, M-group-02(補零兩位數)
+		String baseTagName = "M-group-%02d";
+		// 分組數量
+		Integer groupSize = 2;
+		// groupIndex組別索引
+		Integer groupIndex;
+
+		//當前數量，上面已經新增過至少一人，不可能為0
+		Long currentCount = baseMapper.selectCount(null);
+
+		// 2. 計算組別 (向上取整，例如 201人 → 第2組)
+		groupIndex = (int) Math.ceil(currentCount / (double) groupSize);
+
+		// 3. 生成 Tag 名稱 (補零兩位數)
+		String tagName = String.format(baseTagName, groupIndex);
+		String tagType = "member";
+
+		// 4. 查詢是否已有該 Tag
+		Tag existingTag = tagService.getTagByTypeAndName(tagType, tagName);
+
+		// 5. 如果沒有就創建 Tag
+		if (existingTag == null) {
+			AddTagDTO addTagDTO = new AddTagDTO();
+			addTagDTO.setType(tagType);
+			addTagDTO.setName(tagName);
+			addTagDTO.setDescription("會員分組標籤 (第 " + groupIndex + " 組)");
+			addTagDTO.setStatus(0);
+			String adjustColor = tagService.adjustColor("#4A7056", groupIndex, 5);
+			addTagDTO.setColor(adjustColor);
+			Long insertTagId = tagService.insertTag(addTagDTO);
+			Tag currentTag = tagConvert.addDTOToEntity(addTagDTO);
+			currentTag.setTagId(insertTagId);
+			existingTag = currentTag;
+		}
+
+		// 6.透過tagId 去 關聯表 進行關聯新增
+		MemberTag memberTag = new MemberTag();
+		memberTag.setMemberId(currentMember.getMemberId());
+		memberTag.setTagId(existingTag.getTagId());
+		memberTagService.addMemberTag(memberTag);
+
 		//----------------------------------------------------
 
 		// 之後應該要以這個會員ID 產生Token 回傳前端，讓他直接進入登入狀態
@@ -1287,8 +1330,5 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		quota.addAndGet(-memberCount);
 
 	}
-	
-	
-	
 
 }
