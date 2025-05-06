@@ -483,7 +483,7 @@ public class PaperServiceImpl extends ServiceImpl<PaperMapper, Paper> implements
 
 		// 最後去寄一封信給通訊作者(corresponding_author)
 		asyncService.sendCommonEmail(paper.getCorrespondingAuthorEmail(),
-				"2025 TOPBS & IOPBS Abstract Submission Confirmation", htmlContent, plainTextContent, pdfFileList);
+				"2025 TICBCS Abstract Submission Confirmation", htmlContent, plainTextContent, pdfFileList);
 
 	}
 

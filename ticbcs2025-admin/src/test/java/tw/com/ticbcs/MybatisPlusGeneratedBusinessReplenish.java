@@ -1,4 +1,4 @@
-package tw.com.topbs;
+package tw.com.ticbcs;
 
 import java.io.File;
 import java.sql.Types;
@@ -15,7 +15,10 @@ import com.baomidou.mybatisplus.generator.config.rules.DbColumnType;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
 import com.baomidou.mybatisplus.generator.fill.Column;
 
-public class MybatisPlusGeneratedBusiness {
+/**
+ * 這個生成測試類, 主要是後續開發中有新增table , 進行擴展使用的
+ */
+public class MybatisPlusGeneratedBusinessReplenish {
 
 	// 設置配置屬性
 
@@ -32,7 +35,7 @@ public class MybatisPlusGeneratedBusiness {
 	/**
 	 * jdbc 路径(自行替換)
 	 */
-	private static final String URL = "jdbc:mariadb://192.168.56.1:3306/topbs2025_international_conferenct";
+	private static final String URL = "jdbc:mariadb://192.168.56.1:3306/ticbcs2025_international_conferenct";
 
 	/**
 	 * 数据库账号(自行替換)
@@ -121,21 +124,17 @@ public class MybatisPlusGeneratedBusiness {
 				// 策略配置
 				.strategyConfig(builder -> {
 					// 设置需要生成的表名,排除system類的table
-					builder.addExclude("sys_user", "sys_role", "sys_menu", "sys_user_role", "sys_role_menu")
+					builder.addInclude("attendees").addTablePrefix() // 设置过滤表前缀, sys_user設置成 user表,一般不用寫
 
-							.addTablePrefix() // 设置过滤表前缀, sys_user設置成 user表,一般不用寫
-
-							.controllerBuilder()
-							.enableRestStyle()
-							.enableHyphenStyle()
-							//.enableFileOverride()
-							.mapperBuilder()
-							.enableFileOverride()
+							.controllerBuilder().enableRestStyle().enableHyphenStyle().enableFileOverride() // controller層
+																											// 原檔案覆蓋
+							.mapperBuilder().enableFileOverride() // mapper層 原檔案覆蓋
 							// 將默認的IService的I去掉
-							.serviceBuilder()
-							.formatServiceFileName("%sService")
-							//.enableFileOverride()
+							.serviceBuilder().formatServiceFileName("%sService").enableFileOverride() // service層 原檔案覆蓋
+
 							.entityBuilder()
+							// 移除Boolean 類會自動添加is的問題
+							.enableRemoveIsPrefix()
 							// 开启生成实体时生成字段注解
 							.enableTableFieldAnnotation()
 							// 開啟Lombok
@@ -145,15 +144,11 @@ public class MybatisPlusGeneratedBusiness {
 							// 逻辑删除属性名(实体)
 							.logicDeletePropertyName("deleted")
 							// 覆蓋現有文件
-							.enableFileOverride()
+							.enableFileOverride() // entity層 原檔案覆蓋
 							// 自動填充屬性值,create_time 在新增數據時填充
-							.addTableFills(new Column("create_time", FieldFill.INSERT))
-							// 自動填充屬性值,create_by 在新增數據時填充
-							.addTableFills(new Column("create_by", FieldFill.INSERT))
+							.addTableFills(new Column("create_date", FieldFill.INSERT))
 							// 自動填充屬性值,update_time 在更新數據時填充
-							.addTableFills(new Column("update_time", FieldFill.UPDATE))
-							// 自動填充屬性值,update_by 在更新數據時填充
-							.addTableFills(new Column("update_by", FieldFill.UPDATE));
+							.addTableFills(new Column("update_date", FieldFill.UPDATE));
 
 					// .build();
 
