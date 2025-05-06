@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 
@@ -25,7 +26,7 @@ public interface AttendeesService extends IService<Attendees> {
 	
 	IPage<AttendeesVO> getAllAttendees(Page<Attendees> page);
 	
-	void addAfterPayment();
+	void addAfterPayment(AddAttendeesDTO addAttendees);
 	
 	void addAttendees();
 	

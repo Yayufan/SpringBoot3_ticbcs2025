@@ -52,6 +52,7 @@ import tw.com.ticbcs.pojo.DTO.AddMemberForAdminDTO;
 import tw.com.ticbcs.pojo.DTO.GroupRegistrationDTO;
 import tw.com.ticbcs.pojo.DTO.MemberLoginInfo;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
+import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddMemberDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddOrdersDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddOrdersItemDTO;
@@ -67,6 +68,7 @@ import tw.com.ticbcs.pojo.entity.Tag;
 import tw.com.ticbcs.pojo.excelPojo.MemberExcel;
 import tw.com.ticbcs.saToken.StpKit;
 import tw.com.ticbcs.service.AsyncService;
+import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.MemberService;
 import tw.com.ticbcs.service.OrdersItemService;
 import tw.com.ticbcs.service.OrdersService;
@@ -79,7 +81,8 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 	private static final String MEMBER_CACHE_INFO_KEY = "memberInfo";
 	private static final String ITEMS_SUMMARY_REGISTRATION = "Registration Fee";
 	private static final String GROUP_ITEMS_SUMMARY_REGISTRATION = "Group Registration Fee";
-
+	private static final String NATIONALITY_DOMESTIC = "Taiwan";
+	
 	private final MemberConvert memberConvert;
 	private final OrdersService ordersService;
 	private final OrdersMapper ordersMapper;
@@ -90,6 +93,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 	private final TagMapper tagMapper;
 
 	private final AsyncService asyncService;
+	private final AttendeesService attendeesService;
 
 	//redLockClient01  businessRedissonClient
 	@Qualifier("businessRedissonClient")
@@ -237,7 +241,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 
 			// 查找國家為Taiwan, 有 '註冊費' 這張訂單且處於未繳費的 memberIdList，且如果有額外查詢資料 or 進行模糊查詢
 			LambdaQueryWrapper<Member> memberWrapper = new LambdaQueryWrapper<>();
-			memberWrapper.eq(Member::getCountry, "Taiwan")
+			memberWrapper.eq(Member::getCountry, NATIONALITY_DOMESTIC)
 					.in(Member::getMemberId, memberIdSet)
 					.and(StringUtils.isNotBlank(queryText), wrapper -> {
 						wrapper.like(Member::getRemitAccountLast5, queryText)
@@ -323,7 +327,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		LocalDateTime now = LocalDateTime.now();
 
 		//本次註冊是否是台灣人
-		Boolean isTaiwan = addMemberDTO.getCountry().equals("Taiwan");
+		Boolean isTaiwan = addMemberDTO.getCountry().equals(NATIONALITY_DOMESTIC);
 
 		// 先判斷是否超過註冊時間，當超出註冊時間直接拋出異常，讓全局異常去處理
 		if (now.isAfter(setting.getLastRegistrationTime())) {
@@ -331,64 +335,64 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		}
 
 		// 設定會費 會根據早鳥優惠進行金額變動
-		BigDecimal amount = null;
-
+		//BigDecimal amount = null;
+		BigDecimal amount = BigDecimal.ZERO;
 		// 處於早鳥優惠
-		if (!now.isAfter(setting.getEarlyBirdDiscountPhaseOneDeadline())) {
-
-			if (isTaiwan) {
-				// 他是台灣人，當前時間處於早鳥優惠，金額變動
-				amount = switch (addMemberDTO.getCategory()) {
-				// Member(會員) 的註冊費價格
-				case 1 -> BigDecimal.valueOf(700L);
-				// Others(學生或護士) 的註冊費價格
-				case 2 -> BigDecimal.valueOf(600L);
-				// Non-Member(非會員) 的註冊費價格
-				case 3 -> BigDecimal.valueOf(1000L);
-				default -> throw new RegistrationInfoException("category is not in system");
-				};
-			} else {
-				// 他是外國人，當前時間處於早鳥優惠，金額變動
-				amount = switch (addMemberDTO.getCategory()) {
-				// Member 的註冊費價格
-				case 1 -> BigDecimal.valueOf(9600L);
-				// Others 的註冊費價格
-				case 2 -> BigDecimal.valueOf(4800L);
-				// Non-member的註冊費價格
-				case 3 -> BigDecimal.valueOf(12800L);
-				default -> throw new RegistrationInfoException("category is not in system");
-				};
-			}
-
-		} else if (
-		// 時間比早鳥優惠時間晚 但比截止時間早，處於一般時間
-		now.isAfter(setting.getEarlyBirdDiscountPhaseOneDeadline())
-				&& now.isBefore(setting.getLastRegistrationTime())) {
-			// 早鳥結束但尚未截止
-			if (isTaiwan) {
-				// 他是台灣人，當前時間處於一般時間，金額變動
-				amount = switch (addMemberDTO.getCategory()) {
-				// Member(會員) 的註冊費價格
-				case 1 -> BigDecimal.valueOf(1000L);
-				// Others(學生或護士) 的註冊費價格
-				case 2 -> BigDecimal.valueOf(1200L);
-				// Non-Member(非會員) 的註冊費價格
-				case 3 -> BigDecimal.valueOf(1500L);
-				default -> throw new RegistrationInfoException("category is not in system");
-				};
-			} else {
-				// 他是外國人，當前時間處於一般時間，金額變動
-				amount = switch (addMemberDTO.getCategory()) {
-				// Member 的註冊費價格
-				case 1 -> BigDecimal.valueOf(12800L);
-				// Others 的註冊費價格
-				case 2 -> BigDecimal.valueOf(6400L);
-				// Non-member的註冊費價格
-				case 3 -> BigDecimal.valueOf(16000L);
-				default -> throw new RegistrationInfoException("category is not in system");
-				};
-			}
-		}
+//		if (!now.isAfter(setting.getEarlyBirdDiscountPhaseOneDeadline())) {
+//
+//			if (isTaiwan) {
+//				// 他是台灣人，當前時間處於早鳥優惠，金額變動
+//				amount = switch (addMemberDTO.getCategory()) {
+//				// Member(會員) 的註冊費價格
+//				case 1 -> BigDecimal.valueOf(700L);
+//				// Others(學生或護士) 的註冊費價格
+//				case 2 -> BigDecimal.valueOf(600L);
+//				// Non-Member(非會員) 的註冊費價格
+//				case 3 -> BigDecimal.valueOf(1000L);
+//				default -> throw new RegistrationInfoException("category is not in system");
+//				};
+//			} else {
+//				// 他是外國人，當前時間處於早鳥優惠，金額變動
+//				amount = switch (addMemberDTO.getCategory()) {
+//				// Member 的註冊費價格
+//				case 1 -> BigDecimal.valueOf(9600L);
+//				// Others 的註冊費價格
+//				case 2 -> BigDecimal.valueOf(4800L);
+//				// Non-member的註冊費價格
+//				case 3 -> BigDecimal.valueOf(12800L);
+//				default -> throw new RegistrationInfoException("category is not in system");
+//				};
+//			}
+//
+//		} else if (
+//		// 時間比早鳥優惠時間晚 但比截止時間早，處於一般時間
+//		now.isAfter(setting.getEarlyBirdDiscountPhaseOneDeadline())
+//				&& now.isBefore(setting.getLastRegistrationTime())) {
+//			// 早鳥結束但尚未截止
+//			if (isTaiwan) {
+//				// 他是台灣人，當前時間處於一般時間，金額變動
+//				amount = switch (addMemberDTO.getCategory()) {
+//				// Member(會員) 的註冊費價格
+//				case 1 -> BigDecimal.valueOf(1000L);
+//				// Others(學生或護士) 的註冊費價格
+//				case 2 -> BigDecimal.valueOf(1200L);
+//				// Non-Member(非會員) 的註冊費價格
+//				case 3 -> BigDecimal.valueOf(1500L);
+//				default -> throw new RegistrationInfoException("category is not in system");
+//				};
+//			} else {
+//				// 他是外國人，當前時間處於一般時間，金額變動
+//				amount = switch (addMemberDTO.getCategory()) {
+//				// Member 的註冊費價格
+//				case 1 -> BigDecimal.valueOf(12800L);
+//				// Others 的註冊費價格
+//				case 2 -> BigDecimal.valueOf(6400L);
+//				// Non-member的註冊費價格
+//				case 3 -> BigDecimal.valueOf(16000L);
+//				default -> throw new RegistrationInfoException("category is not in system");
+//				};
+//			}
+//		}
 
 		// 首先新增這個會員資料
 		Member currentMember = memberConvert.addDTOToEntity(addMemberDTO);
@@ -411,7 +415,8 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		addOrdersDTO.setItemsSummary(ITEMS_SUMMARY_REGISTRATION);
 
 		// 設定繳費狀態為 未繳費
-		addOrdersDTO.setStatus(0);
+		//addOrdersDTO.setStatus(0);
+		addOrdersDTO.setStatus(2);//改為已繳費
 
 		addOrdersDTO.setTotalAmount(amount);
 
@@ -434,10 +439,9 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		ordersItemService.addOrdersItem(addOrdersItemDTO);
 
 		// 準備寄信給這個會員通知他，已經成功註冊，所以先製作HTML信件 和 純文字信件
-
 		String categoryString;
 		switch (addMemberDTO.getCategory()) {
-		case 1 -> categoryString = "Member " + "(" + addMemberDTO.getCategoryExtra() + ")";
+		case 1 -> categoryString = "Member ";
 		case 2 -> categoryString = "Others";
 		case 3 -> categoryString = "Non-Member";
 		default -> categoryString = "Unknown";
@@ -449,7 +453,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 						<head>
 							<meta charset="UTF-8">
 							<meta name="viewport" content="width=device-width, initial-scale=1.0">
-							<title>Registration Successful</title>
+							<title>報名成功通知</title>
 							<style>
 								body { font-size: 1.2rem; line-height: 1.8; }
 								td { padding: 10px 0; }
@@ -464,64 +468,60 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 					       			</td>
 					   			</tr>
 								<tr>
-									<td style="font-size:2rem;">Welcome to 2025 TICBCS !</td>
+									<td style="font-size:2rem;">歡迎參加 2025 TICBCS !</td>
 								</tr>
 								<tr>
-									<td>We are pleased to inform you that your registration has been successfully completed.</td>
+									<td>我們很高興通知您，您的報名已成功完成。</td>
 								</tr>
 								<tr>
-									<td>Your registration details are as follows:</td>
+									<td>您的報名資料如下：</td>
 								</tr>
 								<tr>
-						            <td><strong>First Name:</strong> %s</td>
+						            <td><strong>姓名:</strong> %s</td>
 						        </tr>
-						        <tr>
-						            <td><strong>Last Name:</strong> %s</td>
-						        </tr>
-						        <tr>
-							        <td><strong>Country:</strong> %s</td>
+							    <tr>
+							        <td><strong>所屬機構:</strong> %s</td>
 							    </tr>
 							    <tr>
-							        <td><strong>Affiliation:</strong> %s</td>
+							        <td><strong>職稱:</strong> %s</td>
 							    </tr>
 							    <tr>
-							        <td><strong>Job Title:</strong> %s</td>
-							    </tr>
-							    <tr>
-							        <td><strong>Phone:</strong> %s</td>
-							    </tr>
-							    <tr>
-							        <td><strong>Category:</strong> %s</td>
+							        <td><strong>電話:</strong> %s</td>
 							    </tr>
 								<tr>
-									<td>After logging in, please proceed with the payment of the registration fee.</td>
-								</tr>
-								<tr>
-									<td>Completing this payment will grant you access to exclusive accommodation discounts and enable you to submit your work for the conference.</td>
-								</tr>
-								<tr>
-									<td>If you have any questions, feel free to contact us. We look forward to seeing you at the conference!</td>
+									<td>若有任何問題，歡迎隨時與我們聯繫。我們期待與您會面！</td>
 								</tr>
 							</table>
 						</body>
 					</html>
 					"""
-				.formatted(addMemberDTO.getFirstName(), addMemberDTO.getLastName(), addMemberDTO.getCountry(),
-						addMemberDTO.getAffiliation(), addMemberDTO.getJobTitle(), addMemberDTO.getPhone(),
-						categoryString);
+				.formatted(addMemberDTO.getChineseName(),addMemberDTO.getAffiliation(), addMemberDTO.getJobTitle(), addMemberDTO.getPhone());
 
-		String plainTextContent = "Welcome to 2025 TICBCS !\n"
-				+ "Your registration has been successfully completed.\n" + "Your registration details are as follows:\n"
-				+ "First Name: " + addMemberDTO.getFirstName() + "\n" + "Last Name: " + addMemberDTO.getLastName()
-				+ "\n" + "Country: " + addMemberDTO.getCountry() + "\n" + "Affiliation: "
-				+ addMemberDTO.getAffiliation() + "\n" + "Job Title: " + addMemberDTO.getJobTitle() + "\n" + "Phone: "
-				+ addMemberDTO.getPhone() + "\n" + "Category: " + categoryString + "\n"
-				+ "Please proceed with the payment of the registration fee to activate your accommodation discounts and submission features.\n"
-				+ "If you have any questions, feel free to contact us. We look forward to seeing you at the conference!";
+		String plainTextContent = "歡迎參加 2025 TICBCS !\n"
+				+ "我們很高興通知您，您的報名已成功完成。\n"
+				+ "您的報名資料如下：\n"
+				+ "姓名: " + addMemberDTO.getChineseName() + "\n"
+				+ "服務單位: " + addMemberDTO.getAffiliation() + "\n"
+				+ "職稱: " + addMemberDTO.getJobTitle() + "\n"
+				+ "電話: " + addMemberDTO.getPhone() + "\n"
+				+ "若有任何問題，歡迎隨時與我們聯繫。我們期待與您會面！";
 
 		// 透過異步工作去寄送郵件
 		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "2025 TICBCS Registration Successful",
 				htmlContent, plainTextContent);
+		
+		//----------------------------------------------------
+		
+		// 這邊比較特殊，因為是不用收款的狀態，所以直接去觸發新增進與會者名單
+		AddAttendeesDTO addAttendeesDTO = new AddAttendeesDTO();
+		addAttendeesDTO.setEmail(addMemberDTO.getEmail());
+		addAttendeesDTO.setMemberId(memberCount);
+		attendeesService.addAfterPayment(addAttendeesDTO);
+		
+		// 這邊直接實踐，每200名會員設置一個tag, M-group-01
+		
+		
+		//----------------------------------------------------
 
 		// 之後應該要以這個會員ID 產生Token 回傳前端，讓他直接進入登入狀態
 		StpKit.MEMBER.login(currentMember.getMemberId());
@@ -1287,5 +1287,8 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		quota.addAndGet(-memberCount);
 
 	}
+	
+	
+	
 
 }

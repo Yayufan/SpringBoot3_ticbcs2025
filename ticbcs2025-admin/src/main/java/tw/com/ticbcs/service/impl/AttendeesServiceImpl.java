@@ -1,17 +1,20 @@
 package tw.com.ticbcs.service.impl;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import lombok.RequiredArgsConstructor;
+import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.mapper.AttendeesMapper;
+import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.service.AttendeesService;
-
-import java.util.List;
-
-import org.springframework.stereotype.Service;
 
 /**
  * <p>
@@ -22,20 +25,11 @@ import org.springframework.stereotype.Service;
  * @since 2025-04-24
  */
 @Service
+@RequiredArgsConstructor
 public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees> implements AttendeesService {
 
-	@Override
-	public void addAttendees() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void addAfterPayment() {
-		// TODO Auto-generated method stub
-		
-	}
-
+	private final AttendeesConvert attendeesConvert;
+	
 	@Override
 	public AttendeesVO getAttendees(Long id) {
 		// TODO Auto-generated method stub
@@ -54,4 +48,17 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		return null;
 	}
 
+	@Override
+	public void addAfterPayment(AddAttendeesDTO addAttendees) {
+		Attendees attendees = attendeesConvert.addDTOToEntity(addAttendees);
+		baseMapper.insert(attendees);
+	}
+
+	@Override
+	public void addAttendees() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 }

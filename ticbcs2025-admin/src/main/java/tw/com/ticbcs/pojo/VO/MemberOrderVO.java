@@ -26,7 +26,7 @@ public class MemberOrderVO {
 	@Schema(description = "國家")
 	private String country;
 
-	@Schema(description = "用於分類會員資格, 1為 Invited Speaker 、 2為 Board Member 、 3為 Normal Member 、 4為 Companion")
+	@Schema(description = "用於分類會員資格, 1為 Member ，2為 Others ，3為Non-Member，4為MVP")
 	private Integer category;
 
 	@Schema(description = "單位(所屬的機構)")
