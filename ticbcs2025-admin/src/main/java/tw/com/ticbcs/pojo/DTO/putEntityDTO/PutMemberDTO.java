@@ -59,5 +59,12 @@ public class PutMemberDTO {
 //	@NotBlank
 	@Schema(description = "電話號碼,這邊要使用 國碼-號碼")
 	private String phone;
+	
+//	@NotBlank
+	@Schema(description = "餐食調查，填寫葷 或 素")
+	private String food;
+
+	@Schema(description = "飲食禁忌")
+	private String foodTaboo;
 
 }
