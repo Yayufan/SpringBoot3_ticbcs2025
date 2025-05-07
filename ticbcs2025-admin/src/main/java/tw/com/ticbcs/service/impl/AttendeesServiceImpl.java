@@ -21,9 +21,11 @@ import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
+import tw.com.ticbcs.pojo.entity.AttendeesTag;
 import tw.com.ticbcs.pojo.entity.MemberTag;
 import tw.com.ticbcs.pojo.entity.Tag;
 import tw.com.ticbcs.service.AttendeesService;
+import tw.com.ticbcs.service.AttendeesTagService;
 import tw.com.ticbcs.service.TagService;
 
 /**
@@ -39,9 +41,11 @@ import tw.com.ticbcs.service.TagService;
 public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees> implements AttendeesService {
 
 	private final AttendeesConvert attendeesConvert;
-	
+
 	private final TagService tagService;
 	private final TagConvert tagConvert;
+
+	private final AttendeesTagService attendeesTagService;
 
 	@Qualifier("businessRedissonClient")
 	private final RedissonClient redissonClient;
@@ -84,7 +88,6 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				// 如果 設定城當前最大sequence_no
 				attendees.setSequenceNo(nextSeq);
 				baseMapper.insert(attendees);
-				
 
 				//每200名與會者(Attendees)設置一個tag, A-group-01, M-group-02(補零兩位數)
 				String baseTagName = "A-group-%02d";
@@ -122,12 +125,11 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				}
 
 				// 6.透過tagId 去 關聯表 進行關聯新增
-//				MemberTag memberTag = new MemberTag();
-//				memberTag.setMemberId(currentMember.getMemberId());
-//				memberTag.setTagId(existingTag.getTagId());
-//				memberTagService.addMemberTag(memberTag);
-				
-				
+				AttendeesTag attendeesTag = new AttendeesTag();
+				attendeesTag.setAttendeesId(attendees.getAttendeesId());
+				attendeesTag.setTagId(existingTag.getTagId());
+				attendeesTagService.addAttendeesTag(attendeesTag);
+
 			}
 
 		} catch (InterruptedException e) {
