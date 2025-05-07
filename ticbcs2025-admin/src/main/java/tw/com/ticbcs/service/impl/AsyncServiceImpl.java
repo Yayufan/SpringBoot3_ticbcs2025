@@ -132,7 +132,7 @@ public class AsyncServiceImpl implements AsyncService {
 								<table>
 									<tr>
 					       				<td >
-					           				<img src="https://iopbs2025.org.tw/_nuxt/banner.CL2lyu9P.png" alt="Conference Banner"  width="640" style="max-width: 100%%; width: 640px; display: block;" object-fit:cover;">
+					           				<img src="https://ticbcs.zfcloud.cc/_nuxt/ticbcsBanner_new.BuPR5fZA.jpg" alt="Conference Banner"  width="640" style="max-width: 100%%; width: 640px; display: block;" object-fit:cover;">
 					       				</td>
 					   				</tr>
 									<tr>

@@ -472,7 +472,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 							<table>
 								<tr>
 					       			<td >
-					           			<img src="https://iopbs2025.org.tw/_nuxt/banner.CL2lyu9P.png" alt="Conference Banner"  width="640" style="max-width: 100%%; width: 640px; display: block;" object-fit:cover;">
+					           			<img src="https://ticbcs.zfcloud.cc/_nuxt/ticbcsBanner_new.BuPR5fZA.jpg" alt="Conference Banner"  width="640" style="max-width: 100%%; width: 640px; display: block;" object-fit:cover;">
 					       			</td>
 					   			</tr>
 								<tr>
@@ -512,8 +512,8 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 				+ "若有任何問題，歡迎隨時與我們聯繫。我們期待與您會面！";
 
 		// 透過異步工作去寄送郵件
-		//		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "2025 TICBCS Registration Successful", htmlContent,
-		//				plainTextContent);
+		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "2025 TICBCS Registration Successful", htmlContent,
+				plainTextContent);
 
 		//----------------------------------------------------
 
@@ -526,7 +526,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		//每200名會員設置一個tag, M-group-01, M-group-02(補零兩位數)
 		String baseTagName = "M-group-%02d";
 		// 分組數量
-		Integer groupSize = 2;
+		Integer groupSize = 200;
 		// groupIndex組別索引
 		Integer groupIndex;
 

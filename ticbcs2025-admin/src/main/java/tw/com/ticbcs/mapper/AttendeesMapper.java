@@ -1,5 +1,7 @@
 package tw.com.ticbcs.mapper;
 
+import org.apache.ibatis.annotations.Select;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 import tw.com.ticbcs.pojo.entity.Attendees;
@@ -14,4 +16,6 @@ import tw.com.ticbcs.pojo.entity.Attendees;
  */
 public interface AttendeesMapper extends BaseMapper<Attendees> {
 
+	@Select("SELECT MAX(sequence_no) FROM attendees")
+	Integer selectMaxSequenceNo();
 }
