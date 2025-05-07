@@ -125,6 +125,15 @@ public interface TagService extends IService<Tag> {
 	void assignPaperReviewerToTag(List<Long> targetPaperReviewerIdList, Long tagId);
 
 	/**
+	 * 為複數attendees 添加/更新/刪除 tag
+	 * 
+	 * @param targetAttendeesIdList
+	 * @param tagId
+	 */
+	void assignAttendeesToTag(List<Long> targetAttendeesIdList, Long tagId);
+	
+	
+	/**
 	 * 原色 #4A7056（一個深綠色） → 做「同色系明亮度/飽和度漸變」
 	 * 
 	 * 把顏色轉成 HSL（色相 Hue、飽和度 Saturation、亮度 Lightness）
