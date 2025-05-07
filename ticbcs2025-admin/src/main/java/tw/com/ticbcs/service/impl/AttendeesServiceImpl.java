@@ -1,5 +1,7 @@
 package tw.com.ticbcs.service.impl;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -9,20 +11,26 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.mapper.AttendeesMapper;
+import tw.com.ticbcs.mapper.MemberMapper;
+import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
+import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutAttendeesDTO;
+import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.AttendeesTag;
-import tw.com.ticbcs.pojo.entity.MemberTag;
+import tw.com.ticbcs.pojo.entity.Member;
 import tw.com.ticbcs.pojo.entity.Tag;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.AttendeesTagService;
@@ -40,6 +48,8 @@ import tw.com.ticbcs.service.TagService;
 @RequiredArgsConstructor
 public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees> implements AttendeesService {
 
+	private final MemberMapper memberMapper;
+
 	private final AttendeesConvert attendeesConvert;
 
 	private final TagService tagService;
@@ -52,20 +62,33 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Override
 	public AttendeesVO getAttendees(Long id) {
+		// 先查詢到與會者自己的紀錄
+		Attendees attendees = baseMapper.selectById(id);
+
+		// 從attendees的 memberId中找到與會者的基本資料
+		LambdaQueryWrapper<Member> memberWrapper = new LambdaQueryWrapper<>();
+		memberWrapper.eq(Member::getMemberId, attendees.getMemberId());
+		Member member = memberMapper.selectOne(memberWrapper);
+
+		return null;
+	}
+
+	@Override
+	public List<AttendeesVO> getAttendeesList() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<AttendeesVO> getAllAttendees() {
+	public IPage<AttendeesVO> getAttendeesPage(Page<Attendees> page) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public IPage<AttendeesVO> getAllAttendees(Page<Attendees> page) {
+	public void addAttendees(AddAttendeesDTO addAttendees) {
 		// TODO Auto-generated method stub
-		return null;
+
 	}
 
 	@Transactional
@@ -145,7 +168,55 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	}
 
 	@Override
-	public void addAttendees() {
+	public void updateAttendees(PutAttendeesDTO putAttendeesDTO) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void deleteAttendees(Long attendeesId) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void batchDeleteAttendees(List<Long> attendeesIds) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void downloadExcel(HttpServletResponse response) throws UnsupportedEncodingException, IOException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public AttendeesTagVO getAttendeesTagVO(Long id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPage<AttendeesTagVO> getAttendeesTagVOPage(Page<Attendees> pageInfo) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPage<AttendeesTagVO> getAttendeesTagVOPageByQuery(Page<Attendees> pageInfo, String queryText) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void assignTagToAttendees(List<Long> targetTagIdList, Long memberId) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO) {
 		// TODO Auto-generated method stub
 
 	}
