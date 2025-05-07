@@ -15,11 +15,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
+import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.mapper.AttendeesMapper;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
+import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
+import tw.com.ticbcs.pojo.entity.MemberTag;
+import tw.com.ticbcs.pojo.entity.Tag;
 import tw.com.ticbcs.service.AttendeesService;
+import tw.com.ticbcs.service.TagService;
 
 /**
  * <p>
@@ -34,6 +39,9 @@ import tw.com.ticbcs.service.AttendeesService;
 public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees> implements AttendeesService {
 
 	private final AttendeesConvert attendeesConvert;
+	
+	private final TagService tagService;
+	private final TagConvert tagConvert;
 
 	@Qualifier("businessRedissonClient")
 	private final RedissonClient redissonClient;
@@ -76,6 +84,50 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				// 如果 設定城當前最大sequence_no
 				attendees.setSequenceNo(nextSeq);
 				baseMapper.insert(attendees);
+				
+
+				//每200名與會者(Attendees)設置一個tag, A-group-01, M-group-02(補零兩位數)
+				String baseTagName = "A-group-%02d";
+				// 分組數量
+				Integer groupSize = 200;
+				// groupIndex組別索引
+				Integer groupIndex;
+
+				//當前數量，上面已經新增過至少一人，不可能為0
+				Long currentCount = baseMapper.selectCount(null);
+
+				// 2. 計算組別 (向上取整，例如 201人 → 第2組)
+				groupIndex = (int) Math.ceil(currentCount / (double) groupSize);
+
+				// 3. 生成 Tag 名稱 (補零兩位數)
+				String tagName = String.format(baseTagName, groupIndex);
+				String tagType = "attendees";
+
+				// 4. 查詢是否已有該 Tag
+				Tag existingTag = tagService.getTagByTypeAndName(tagType, tagName);
+
+				// 5. 如果沒有就創建 Tag
+				if (existingTag == null) {
+					AddTagDTO addTagDTO = new AddTagDTO();
+					addTagDTO.setType(tagType);
+					addTagDTO.setName(tagName);
+					addTagDTO.setDescription("會員分組標籤 (第 " + groupIndex + " 組)");
+					addTagDTO.setStatus(0);
+					String adjustColor = tagService.adjustColor("#001F54", groupIndex, 5);
+					addTagDTO.setColor(adjustColor);
+					Long insertTagId = tagService.insertTag(addTagDTO);
+					Tag currentTag = tagConvert.addDTOToEntity(addTagDTO);
+					currentTag.setTagId(insertTagId);
+					existingTag = currentTag;
+				}
+
+				// 6.透過tagId 去 關聯表 進行關聯新增
+//				MemberTag memberTag = new MemberTag();
+//				memberTag.setMemberId(currentMember.getMemberId());
+//				memberTag.setTagId(existingTag.getTagId());
+//				memberTagService.addMemberTag(memberTag);
+				
+				
 			}
 
 		} catch (InterruptedException e) {

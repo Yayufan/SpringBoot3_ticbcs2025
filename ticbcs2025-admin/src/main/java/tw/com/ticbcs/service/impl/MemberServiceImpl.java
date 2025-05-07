@@ -497,7 +497,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 							        <td><strong>電話:</strong> %s</td>
 							    </tr>
 								<tr>
-									<td>若有任何問題，歡迎隨時與我們聯繫。我們期待與您會面！</td>
+									<td>此信件為系統自動寄送，請勿回覆此信！</td>
 								</tr>
 							</table>
 						</body>
