@@ -25,50 +25,50 @@ import lombok.Setter;
 @Schema(name = "CheckinRecord", description = "簽到退紀錄")
 public class CheckinRecord implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Schema(description = "主鍵ID")
-    @TableId("checkin_record_id")
-    private Long checkinRecordId;
+	@Schema(description = "主鍵ID")
+	@TableId("checkin_record_id")
+	private Long checkinRecordId;
 
-    @Schema(description = "與會者ID")
-    @TableField("attendees_id")
-    private Long attendeesId;
+	@Schema(description = "與會者ID")
+	@TableField("attendees_id")
+	private Long attendeesId;
 
-    @Schema(description = "簽到/退地點,保留欄位，未來擴展")
-    @TableField("location")
-    private String location;
+	@Schema(description = "簽到/退地點,保留欄位，未來擴展")
+	@TableField("location")
+	private String location;
 
-    @Schema(description = "動作類型, 1=簽到, 2=簽退")
-    @TableField("action_type")
-    private Byte actionType;
+	@Schema(description = "動作類型, 1=簽到, 2=簽退")
+	@TableField("action_type")
+	private Integer actionType;
 
-    @Schema(description = "簽到/退時間")
-    @TableField("action_time")
-    private LocalDateTime actionTime;
+	@Schema(description = "簽到/退時間")
+	@TableField("action_time")
+	private LocalDateTime actionTime;
 
-    @Schema(description = "備註")
-    @TableField("remark")
-    private String remark;
+	@Schema(description = "備註")
+	@TableField("remark")
+	private String remark;
 
-    @Schema(description = "創建者")
-    @TableField("create_by")
-    private String createBy;
+	@Schema(description = "創建者")
+	@TableField("create_by")
+	private String createBy;
 
-    @Schema(description = "創建時間")
-    @TableField(value = "create_date", fill = FieldFill.INSERT)
-    private LocalDateTime createDate;
+	@Schema(description = "創建時間")
+	@TableField(value = "create_date", fill = FieldFill.INSERT)
+	private LocalDateTime createDate;
 
-    @Schema(description = "最後修改者")
-    @TableField("update_by")
-    private String updateBy;
+	@Schema(description = "最後修改者")
+	@TableField("update_by")
+	private String updateBy;
 
-    @Schema(description = "最後修改時間")
-    @TableField(value = "update_date", fill = FieldFill.UPDATE)
-    private LocalDateTime updateDate;
+	@Schema(description = "最後修改時間")
+	@TableField(value = "update_date", fill = FieldFill.UPDATE)
+	private LocalDateTime updateDate;
 
-    @Schema(description = "邏輯刪除,預設為0活耀,1為刪除")
-    @TableField("is_deleted")
-    @TableLogic
-    private Integer isDeleted;
+	@Schema(description = "邏輯刪除,預設為0活耀,1為刪除")
+	@TableField("is_deleted")
+	@TableLogic
+	private Integer isDeleted;
 }
