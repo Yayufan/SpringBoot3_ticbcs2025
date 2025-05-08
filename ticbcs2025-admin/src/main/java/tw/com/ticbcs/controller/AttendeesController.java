@@ -83,16 +83,15 @@ public class AttendeesController {
 		return R.ok(attendeesPage);
 	}
 
-	@PostMapping()
-	@Operation(summary = "新增單一與會者")
-	@Parameters({
-			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
-	@SaCheckRole("super-admin")
-	public R<Void> saveAttendees(@RequestBody @Valid AddAttendeesDTO addAttendeesDTO) {
-		attendeesService.addAttendees(addAttendeesDTO);
-		return R.ok();
-	}
-
+	//	@PostMapping()
+	//	@Operation(summary = "新增單一與會者")
+	//	@Parameters({
+	//			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
+	//	@SaCheckRole("super-admin")
+	//	public R<Void> saveAttendees(@RequestBody @Valid AddAttendeesDTO addAttendeesDTO) {
+	//		attendeesService.addAttendees(addAttendeesDTO);
+	//		return R.ok();
+	//	}
 
 	@DeleteMapping("{id}")
 	@Parameters({
@@ -114,7 +113,7 @@ public class AttendeesController {
 		return R.ok();
 
 	}
-	
+
 	@Operation(summary = "下載與會者excel列表")
 	@SaCheckRole("super-admin")
 	@Parameters({
@@ -123,7 +122,7 @@ public class AttendeesController {
 	public void downloadExcel(HttpServletResponse response) throws IOException {
 		attendeesService.downloadExcel(response);
 	}
-	
+
 	/** 以下是跟Tag有關的Controller */
 
 	@Operation(summary = "根據與會者ID 查詢與會者資料及他持有的標籤")
@@ -155,7 +154,7 @@ public class AttendeesController {
 			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
 	@GetMapping("tag/pagination-by-query")
 	public R<IPage<AttendeesTagVO>> getAllAttendeesTagVOByQuery(@RequestParam Integer page, @RequestParam Integer size,
-			@RequestParam(required = false) String queryText, @RequestParam(required = false) Integer status) {
+			@RequestParam(required = false) String queryText) {
 
 		Page<Attendees> pageInfo = new Page<>(page, size);
 		IPage<AttendeesTagVO> attendeesPage;
@@ -171,7 +170,8 @@ public class AttendeesController {
 	@SaCheckRole("super-admin")
 	@PutMapping("tag")
 	public R<Void> assignTagToAttendees(@Validated @RequestBody AddTagToAttendeesDTO addTagToAttendeesDTO) {
-		attendeesService.assignTagToAttendees(addTagToAttendeesDTO.getTargetTagIdList(), addTagToAttendeesDTO.getAttendeesId());
+		attendeesService.assignTagToAttendees(addTagToAttendeesDTO.getTargetTagIdList(),
+				addTagToAttendeesDTO.getAttendeesId());
 		return R.ok();
 
 	}
@@ -187,7 +187,5 @@ public class AttendeesController {
 		return R.ok();
 
 	}
-
-
 
 }

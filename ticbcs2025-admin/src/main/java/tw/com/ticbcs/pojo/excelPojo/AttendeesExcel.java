@@ -10,7 +10,7 @@ import lombok.Data;
 public class AttendeesExcel {
 
 	@ExcelProperty("參加者ID")
-	private Long attendeesId;
+	private String attendeesId;
 
 	@ExcelProperty("簽到狀態 (0未簽到 1已簽到 2已簽退)")
 	private Integer lastCheckinStatus;
@@ -19,7 +19,7 @@ public class AttendeesExcel {
 	private LocalDateTime lastCheckinTime;
 
 	@ExcelProperty("會員ID")
-	private Long memberId;
+	private String memberId;
 
 	// Member 相關欄位
 	

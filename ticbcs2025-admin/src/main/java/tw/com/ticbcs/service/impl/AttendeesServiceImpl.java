@@ -91,7 +91,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		// 從attendees的 attendeesId中找到與會者的基本資料
 		LambdaQueryWrapper<Member> attendeesWrapper = new LambdaQueryWrapper<>();
-		attendeesWrapper.eq(Member::getMemberId, attendees.getAttendeesId());
+		attendeesWrapper.eq(Member::getMemberId, attendees.getMemberId());
 		Member member = memberMapper.selectOne(attendeesWrapper);
 
 		AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
@@ -243,7 +243,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 		response.setCharacterEncoding("utf-8");
 		// 这里URLEncoder.encode可以防止中文乱码 ， 和easyexcel没有关系
-		String fileName = URLEncoder.encode("會員名單", "UTF-8").replaceAll("\\+", "%20");
+		String fileName = URLEncoder.encode("與會者名單", "UTF-8").replaceAll("\\+", "%20");
 		response.setHeader("Content-disposition", "attachment;filename*=" + fileName + ".xlsx");
 
 		// 查詢所有會員，用來填充與會者的基本資訊
@@ -264,7 +264,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		}).collect(Collectors.toList());
 
-		EasyExcel.write(response.getOutputStream(), MemberExcel.class).sheet("與會者列表").doWrite(excelData);
+		EasyExcel.write(response.getOutputStream(), AttendeesExcel.class).sheet("與會者列表").doWrite(excelData);
 
 	}
 
