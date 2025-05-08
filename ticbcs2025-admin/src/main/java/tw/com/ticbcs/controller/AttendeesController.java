@@ -30,7 +30,6 @@ import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.pojo.DTO.SendEmailByTagDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagToAttendeesDTO;
-import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutAttendeesDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
@@ -94,15 +93,6 @@ public class AttendeesController {
 		return R.ok();
 	}
 
-	@PutMapping
-	@Parameters({
-			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
-	@SaCheckRole("super-admin")
-	@Operation(summary = "修改與會者")
-	public R<Attendees> updateAttendees(@RequestBody @Valid PutAttendeesDTO putAttendeesDTO) {
-		attendeesService.updateAttendees(putAttendeesDTO);
-		return R.ok();
-	}
 
 	@DeleteMapping("{id}")
 	@Parameters({
@@ -123,6 +113,15 @@ public class AttendeesController {
 		attendeesService.batchDeleteAttendees(ids);
 		return R.ok();
 
+	}
+	
+	@Operation(summary = "下載與會者excel列表")
+	@SaCheckRole("super-admin")
+	@Parameters({
+			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
+	@GetMapping("/download-excel")
+	public void downloadExcel(HttpServletResponse response) throws IOException {
+		attendeesService.downloadExcel(response);
 	}
 	
 	/** 以下是跟Tag有關的Controller */
@@ -189,13 +188,6 @@ public class AttendeesController {
 
 	}
 
-	@Operation(summary = "下載與會者excel列表")
-	@SaCheckRole("super-admin")
-	@Parameters({
-			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
-	@GetMapping("/download-excel")
-	public void downloadExcel(HttpServletResponse response) throws IOException {
-		attendeesService.downloadExcel(response);
-	}
+
 
 }

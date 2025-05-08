@@ -2,6 +2,7 @@ package tw.com.ticbcs.service.impl;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -36,16 +38,19 @@ import tw.com.ticbcs.mapper.AttendeesMapper;
 import tw.com.ticbcs.mapper.AttendeesTagMapper;
 import tw.com.ticbcs.mapper.MemberMapper;
 import tw.com.ticbcs.mapper.TagMapper;
+import tw.com.ticbcs.pojo.BO.MemberExcelRaw;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
-import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutAttendeesDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.AttendeesTag;
 import tw.com.ticbcs.pojo.entity.Member;
+import tw.com.ticbcs.pojo.entity.Orders;
 import tw.com.ticbcs.pojo.entity.Tag;
+import tw.com.ticbcs.pojo.excelPojo.AttendeesExcel;
+import tw.com.ticbcs.pojo.excelPojo.MemberExcel;
 import tw.com.ticbcs.service.AsyncService;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.AttendeesTagService;
@@ -235,7 +240,31 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Override
 	public void downloadExcel(HttpServletResponse response) throws UnsupportedEncodingException, IOException {
-		// TODO Auto-generated method stub
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		response.setCharacterEncoding("utf-8");
+		// 这里URLEncoder.encode可以防止中文乱码 ， 和easyexcel没有关系
+		String fileName = URLEncoder.encode("會員名單", "UTF-8").replaceAll("\\+", "%20");
+		response.setHeader("Content-disposition", "attachment;filename*=" + fileName + ".xlsx");
+
+		// 查詢所有會員，用來填充與會者的基本資訊
+		List<Member> memberList = memberMapper.selectMembers();
+		// 訂單轉成一對一 Map，key為 memberId, value為訂單本身
+		Map<Long, Member> memberIdToMemberMap = memberList.stream()
+				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
+
+		// 獲取所有與會者
+		List<Attendees> attendeesList = baseMapper.selectAttendees();
+
+		// 資料轉換成Excel
+		List<AttendeesExcel> excelData = attendeesList.stream().map(attendees -> {
+			AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
+			attendeesVO.setMember(memberIdToMemberMap.get(attendees.getMemberId()));
+			AttendeesExcel attendeesExcel = attendeesConvert.voToExcel(attendeesVO);
+			return attendeesExcel;
+
+		}).collect(Collectors.toList());
+
+		EasyExcel.write(response.getOutputStream(), MemberExcel.class).sheet("與會者列表").doWrite(excelData);
 
 	}
 
@@ -262,14 +291,14 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			return attendeesTagVO;
 		}
 
-		// 4.獲取到所有attendeesTag的關聯關係後，提取出tagIdList
-		List<Long> tagIdList = attendeesTagList.stream()
+		// 4.獲取到所有attendeesTag的關聯關係後，提取出tagIds
+		List<Long> tagIds = attendeesTagList.stream()
 				.map(attendeesTag -> attendeesTag.getTagId())
 				.collect(Collectors.toList());
 
 		// 5.去Tag表中查詢實際的Tag資料，並轉換成Set集合
 		LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
-		tagWrapper.in(Tag::getTagId, tagIdList);
+		tagWrapper.in(Tag::getTagId, tagIds);
 		List<Tag> tagList = tagMapper.selectList(tagWrapper);
 		Set<Tag> tagSet = new HashSet<>(tagList);
 
