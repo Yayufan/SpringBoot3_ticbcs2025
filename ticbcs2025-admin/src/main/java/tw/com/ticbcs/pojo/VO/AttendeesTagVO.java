@@ -26,7 +26,4 @@ public class AttendeesTagVO {
 	@Schema(description = "持有的標籤")
 	private Set<Tag> tagSet;
 
-	@Schema(description = "是否為去年與會者,true為是,false為否")
-	private Boolean isLastYearAttendee = false;
-
 }

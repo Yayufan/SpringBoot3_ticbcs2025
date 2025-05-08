@@ -3,6 +3,7 @@ package tw.com.ticbcs.convert;
 import org.mapstruct.Mapper;
 
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
+import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 
@@ -14,6 +15,8 @@ public interface AttendeesConvert {
 	// Attendees putDTOToEntity(PutAttendeesDTO putAttendeesDTO);
 	
 	AttendeesVO entityToVO(Attendees attendees);
+	
+	AttendeesTagVO entityToAttendeesTagVO(Attendees attendees);
 	
 	
 	

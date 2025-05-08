@@ -59,7 +59,7 @@ public interface AttendeesService extends IService<Attendees> {
 	 * @param id
 	 * @return
 	 */
-	AttendeesTagVO getAttendeesTagVO(Long id);
+	AttendeesTagVO getAttendeesTagVO(Long attendeesId);
 
 	/**
 	 * 獲取所有與會者資訊 和 Tag標籤(分頁)

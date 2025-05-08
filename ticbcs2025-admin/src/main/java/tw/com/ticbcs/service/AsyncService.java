@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.core.io.ByteArrayResource;
 
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
+import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Member;
 import tw.com.ticbcs.pojo.entity.Paper;
 import tw.com.ticbcs.pojo.entity.PaperReviewer;
@@ -65,4 +66,16 @@ public interface AsyncService {
 	 */
 	void batchSendEmailToPaperReviewer(List<PaperReviewer> paperReviewerList, SendEmailDTO sendEmailDTO);
 
+	
+	
+	/**
+	 * 呼叫時觸發一個線程，批量寄信給 與會者 ，裡面會根據寄出10封信件等3秒的模式，避免控制寄信速率
+	 * 
+	 * @param attendeesList
+	 * @param sendEmailDTO
+	 */
+	void batchSendEmailToAttendeess(List<AttendeesVO> attendeesList, SendEmailDTO sendEmailDTO);
+		
+	
+	
 }

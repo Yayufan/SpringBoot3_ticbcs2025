@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import tw.com.ticbcs.exception.RegistrationInfoException;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
+import tw.com.ticbcs.pojo.VO.AttendeesVO;
+import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.Member;
 import tw.com.ticbcs.pojo.entity.Paper;
 import tw.com.ticbcs.pojo.entity.PaperReviewer;
@@ -165,15 +167,15 @@ public class AsyncServiceImpl implements AsyncService {
 							        <tr>
 							            <td><strong>Category:</strong> %s</td>
 							        </tr>
-							        
+
 							        <tr>
 							            <td><strong>Account:</strong> %s</td>
 							        </tr>
 							        							        <tr>
 							            <td><strong>Password:</strong> %s</td>
 							        </tr>
-							        
-							        
+
+
 									<tr>
 										<td>After logging in, please proceed with the payment of the registration fee.</td>
 									</tr>
@@ -188,15 +190,16 @@ public class AsyncServiceImpl implements AsyncService {
 						</html>
 					"""
 					.formatted(member.getFirstName(), member.getLastName(), member.getCountry(),
-							member.getAffiliation(), member.getJobTitle(), member.getPhone(), categoryString,member.getEmail(),member.getPassword());
+							member.getAffiliation(), member.getJobTitle(), member.getPhone(), categoryString,
+							member.getEmail(), member.getPassword());
 
 			String plainTextContent = "Welcome to 2025 TICBCS !\n"
 					+ "Your Group registration has been successfully completed.\n"
 					+ "Your registration details are as follows:\n" + "First Name: " + member.getFirstName() + "\n"
 					+ "Last Name: " + member.getLastName() + "\n" + "Country: " + member.getCountry() + "\n"
 					+ "Affiliation: " + member.getAffiliation() + "\n" + "Job Title: " + member.getJobTitle() + "\n"
-					+ "Phone: " + member.getPhone() + "\n" + "Category: " + categoryString + "\n"
-					+ "Account: " + member.getEmail() + "\n" + "Password: " + member.getPassword() + "\n"
+					+ "Phone: " + member.getPhone() + "\n" + "Category: " + categoryString + "\n" + "Account: "
+					+ member.getEmail() + "\n" + "Password: " + member.getPassword() + "\n"
 					+ "Please proceed with the payment of the registration fee to activate your accommodation discounts and submission features.\n"
 					+ "If you have any questions, feel free to contact us. We look forward to seeing you at the conference!";
 			helper.setText(plainTextContent, false); // 纯文本版本
@@ -319,9 +322,6 @@ public class AsyncServiceImpl implements AsyncService {
 				String htmlContent = this.replacePaperMergeTag(sendEmailDTO.getHtmlContent(), paper);
 				String plainText = this.replacePaperMergeTag(sendEmailDTO.getPlainText(), paper);
 
-				
-				
-				
 				// 當今天為測試信件，則將信件全部寄送給測試信箱
 				if (sendEmailDTO.getIsTest()) {
 					this.sendCommonEmail(sendEmailDTO.getTestEmail(), sendEmailDTO.getSubject(), htmlContent,
@@ -414,6 +414,61 @@ public class AsyncServiceImpl implements AsyncService {
 				.replace("{{phone}}", paperReviewer.getPhone())
 				.replace("{{account}}", paperReviewer.getAccount())
 				.replace("{{password}}", paperReviewer.getPassword());
+
+		return newContent;
+	}
+
+	@Override
+	@Async("taskExecutor")
+	public void batchSendEmailToAttendeess(List<AttendeesVO> attendeesVOList, SendEmailDTO sendEmailDTO) {
+		// 批量寄信數量
+		int batchSize = 10;
+		// 批量寄信間隔 3000 毫秒
+		long delayMs = 3000L;
+
+		/**
+		 * 把一個 List<T> 拆成若干個小清單（subList），每組大小為 batchSize：
+		 * List<String> names = Arrays.asList("A", "B", "C", "D", "E");
+		 * List<List<String>> batches = Lists.partition(names, 2);
+		 * 
+		 * // 結果： [["A", "B"], ["C", "D"], ["E"]]
+		 * 
+		 * 
+		 */
+		List<List<AttendeesVO>> batches = Lists.partition(attendeesVOList, batchSize);
+
+		for (List<AttendeesVO> batch : batches) {
+			for (AttendeesVO attendeesVO : batch) {
+				String htmlContent = this.replaceAttendeesMergeTag(sendEmailDTO.getHtmlContent(), attendeesVO);
+				String plainText = this.replaceAttendeesMergeTag(sendEmailDTO.getPlainText(), attendeesVO);
+
+				// 當今天為測試信件，則將信件全部寄送給測試信箱
+				if (sendEmailDTO.getIsTest()) {
+					this.sendCommonEmail(sendEmailDTO.getTestEmail(), sendEmailDTO.getSubject(), htmlContent,
+							plainText);
+				} else {
+					// 內部觸發sendCommonEmail時不會額外開闢一個線程，因為@Async是讓整個ServiceImpl 代表一個線程
+					this.sendCommonEmail(attendeesVO.getMember().getEmail(), sendEmailDTO.getSubject(), htmlContent,
+							plainText);
+
+				}
+
+			}
+
+			try {
+				Thread.sleep(delayMs); // ✅ 控速，避免信箱被擋
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+
+	}
+
+	private String replaceAttendeesMergeTag(String content, AttendeesVO attendeesVO) {
+		String newContent;
+
+		newContent = content.replace("{{QRcode}}", "轉成QRcode圖片")
+				.replace("{{name}}", attendeesVO.getMember().getChineseName());
 
 		return newContent;
 	}
