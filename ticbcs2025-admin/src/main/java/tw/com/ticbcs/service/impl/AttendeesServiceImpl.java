@@ -89,19 +89,53 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		attendeesWrapper.eq(Member::getMemberId, attendees.getAttendeesId());
 		Member member = memberMapper.selectOne(attendeesWrapper);
 
-		return null;
+		AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
+		attendeesVO.setMember(member);
+
+		return attendeesVO;
 	}
 
 	@Override
 	public List<AttendeesVO> getAttendeesList() {
-		// TODO Auto-generated method stub
-		return null;
+		List<Attendees> attendeesList = baseMapper.selectList(null);
+
+		// 從attendees的 attendeesId中找到與會者的基本資料
+		List<Member> memberList = memberMapper.selectList(null);
+		Map<Long, Member> memberIdToMemberMap = memberList.stream()
+				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
+
+		List<AttendeesVO> attendeesVOList = attendeesList.stream().map(attendees -> {
+			AttendeesVO vo = attendeesConvert.entityToVO(attendees);
+			vo.setMember(memberIdToMemberMap.get(attendees.getMemberId()));
+			return vo;
+		}).collect(Collectors.toList());
+
+		return attendeesVOList;
 	}
 
 	@Override
 	public IPage<AttendeesVO> getAttendeesPage(Page<Attendees> page) {
-		// TODO Auto-generated method stub
-		return null;
+		// 查詢attendees 分頁對象
+		Page<Attendees> attendeesPage = baseMapper.selectPage(page, null);
+
+		// 從attendees的 memberId 中找到與會者的基本資料
+		List<Member> memberList = memberMapper.selectList(null);
+		Map<Long, Member> memberIdToMemberMap = memberList.stream()
+				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
+
+		// 資料轉換成VO
+		List<AttendeesVO> attendeesVOList = attendeesPage.getRecords().stream().map(attendees -> {
+			AttendeesVO vo = attendeesConvert.entityToVO(attendees);
+			vo.setMember(memberIdToMemberMap.get(attendees.getMemberId()));
+			return vo;
+		}).collect(Collectors.toList());
+
+		// 封裝成VOpage
+		Page<AttendeesVO> attendeesVOPage = new Page<>(attendeesPage.getCurrent(), attendeesPage.getSize(),
+				attendeesPage.getTotal());
+		attendeesVOPage.setRecords(attendeesVOList);
+
+		return attendeesVOPage;
 	}
 
 	@Override
@@ -187,20 +221,15 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	}
 
 	@Override
-	public void updateAttendees(PutAttendeesDTO putAttendeesDTO) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void deleteAttendees(Long attendeesId) {
-		// TODO Auto-generated method stub
-
+		baseMapper.deleteById(attendeesId);
 	}
 
 	@Override
 	public void batchDeleteAttendees(List<Long> attendeesIds) {
-		// TODO Auto-generated method stub
+		for (Long attendeesId : attendeesIds) {
+			this.deleteAttendees(attendeesId);
+		}
 
 	}
 
@@ -362,6 +391,10 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		// 且attendeesIdsByStatus裡面元素不為空，則加入篩選條件
 		memberWrapper.and(StringUtils.isNotBlank(queryText),
 				wrapper -> wrapper.like(Member::getChineseName, queryText)
+						.or()
+						.like(Member::getFirstName, queryText)
+						.or()
+						.like(Member::getLastName, queryText)
 						.or()
 						.like(Member::getPhone, queryText)
 						.or()

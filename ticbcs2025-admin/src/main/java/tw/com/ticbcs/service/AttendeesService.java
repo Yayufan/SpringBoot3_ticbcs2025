@@ -36,8 +36,6 @@ public interface AttendeesService extends IService<Attendees> {
 
 	void addAttendees(AddAttendeesDTO addAttendees);
 
-	void updateAttendees(PutAttendeesDTO putAttendeesDTO);
-
 	void deleteAttendees(Long attendeesId);
 
 	void batchDeleteAttendees(List<Long> attendeesIds);
