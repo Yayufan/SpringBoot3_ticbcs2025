@@ -280,7 +280,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
 		// 6. 執行刪除操作，如果 需刪除集合 中不為空，則開始刪除
 		if (!attendeessToRemove.isEmpty()) {
-			attendeesTagService.removeTagRelationsForAttendeess(tagId, attendeessToRemove);
+			attendeesTagService.removeAttendeesFromTag(tagId, attendeessToRemove);
 		}
 
 		// 7. 執行新增操作，如果 需新增集合 中不為空，則開始新增

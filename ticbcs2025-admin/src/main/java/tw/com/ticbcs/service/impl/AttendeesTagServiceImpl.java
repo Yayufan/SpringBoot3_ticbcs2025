@@ -1,5 +1,6 @@
 package tw.com.ticbcs.service.impl;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -25,10 +26,37 @@ public class AttendeesTagServiceImpl extends ServiceImpl<AttendeesTagMapper, Att
 		implements AttendeesTagService {
 
 	@Override
+	public List<AttendeesTag> getAttendeesTagByAttendeesId(Long attendeesId) {
+		LambdaQueryWrapper<AttendeesTag> currentQueryWrapper = new LambdaQueryWrapper<>();
+		currentQueryWrapper.eq(AttendeesTag::getAttendeesId, attendeesId);
+		List<AttendeesTag> attendeesTagList = baseMapper.selectList(currentQueryWrapper);
+
+		return attendeesTagList;
+	}
+
+	@Override
 	public List<AttendeesTag> getAttendeesTagByTagId(Long tagId) {
 		LambdaQueryWrapper<AttendeesTag> currentQueryWrapper = new LambdaQueryWrapper<>();
 		currentQueryWrapper.eq(AttendeesTag::getTagId, tagId);
 		List<AttendeesTag> attendeesTagList = baseMapper.selectList(currentQueryWrapper);
+
+		return attendeesTagList;
+	}
+
+	@Override
+	public List<AttendeesTag> getAttendeesTagByAttendeesIds(Collection<Long> attendeesIds) {
+		LambdaQueryWrapper<AttendeesTag> currentQueryWrapper = new LambdaQueryWrapper<>();
+		currentQueryWrapper.eq(AttendeesTag::getAttendeesTagId, attendeesIds);
+		List<AttendeesTag> attendeesTagList = baseMapper.selectList(currentQueryWrapper);
+
+		return attendeesTagList;
+	}
+
+	@Override
+	public List<AttendeesTag> getAttendeesTagByTagIds(Collection<Long> tagIds) {
+		LambdaQueryWrapper<AttendeesTag> attendeesTagWrapper = new LambdaQueryWrapper<>();
+		attendeesTagWrapper.in(AttendeesTag::getTagId, tagIds);
+		List<AttendeesTag> attendeesTagList = baseMapper.selectList(attendeesTagWrapper);
 
 		return attendeesTagList;
 	}
@@ -40,12 +68,21 @@ public class AttendeesTagServiceImpl extends ServiceImpl<AttendeesTagMapper, Att
 	}
 
 	@Override
-	public void removeTagRelationsForAttendeess(Long tagId, Set<Long> attendeessToRemove) {
+	public void removeAttendeesFromTag(Long tagId, Set<Long> attendeessToRemove) {
 		LambdaQueryWrapper<AttendeesTag> deleteAttendeesTagWrapper = new LambdaQueryWrapper<>();
 		deleteAttendeesTagWrapper.eq(AttendeesTag::getTagId, tagId)
 				.in(AttendeesTag::getAttendeesId, attendeessToRemove);
 		baseMapper.delete(deleteAttendeesTagWrapper);
 
+	}
+
+	@Override
+	public void removeTagsFromAttendee(Long attendeesId, Set<Long> tagsToRemove) {
+		LambdaQueryWrapper<AttendeesTag> deleteAttendeesTagWrapper = new LambdaQueryWrapper<>();
+		deleteAttendeesTagWrapper.eq(AttendeesTag::getAttendeesId, attendeesId)
+				.in(AttendeesTag::getTagId, tagsToRemove);
+		baseMapper.delete(deleteAttendeesTagWrapper);
+		
 	}
 
 }

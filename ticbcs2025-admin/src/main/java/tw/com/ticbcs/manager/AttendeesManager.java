@@ -28,7 +28,7 @@ public class AttendeesManager {
 		// 根據ids 查詢與會者列表
 		List<Attendees> attendeesList = attendeesMapper.selectBatchIds(ids);
 
-		// 根據與會者列表對應的memberId 整合成List,並拿到memberList  
+		// 根據與會者列表對應的memberId 整合成List,並拿到memberList 
 		List<Long> memberIds = attendeesList.stream().map(Attendees::getMemberId).collect(Collectors.toList());
 		List<Member> memberList = memberMapper.selectBatchIds(memberIds);
 

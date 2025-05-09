@@ -3,6 +3,7 @@ package tw.com.ticbcs.service;
 import tw.com.ticbcs.pojo.entity.AttendeesTag;
 import tw.com.ticbcs.pojo.entity.AttendeesTag;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +18,15 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2025-05-07
  */
 public interface AttendeesTagService extends IService<AttendeesTag> {
+
+	/**
+	 * 根據 attendeesId 查詢與之有關的所有Tag關聯
+	 * 
+	 * @param attendeesId
+	 * @return
+	 */
+	List<AttendeesTag> getAttendeesTagByAttendeesId(Long attendeesId);
+
 	/**
 	 * 根據 tagId 查詢與之有關的所有Attendees關聯
 	 * 
@@ -26,6 +36,22 @@ public interface AttendeesTagService extends IService<AttendeesTag> {
 	List<AttendeesTag> getAttendeesTagByTagId(Long tagId);
 
 	/**
+	 * 根據複數 attendeesId 查詢與之有關的所有Tag關聯
+	 * 
+	 * @param attendeesIds
+	 * @return
+	 */
+	List<AttendeesTag> getAttendeesTagByAttendeesIds(Collection<Long> attendeesIds);
+
+	/**
+	 * 根據複數 tagId 查詢與之有關的所有Tag關聯
+	 * 
+	 * @param tagIds
+	 * @return
+	 */
+	List<AttendeesTag> getAttendeesTagByTagIds(Collection<Long> tagIds);
+
+	/**
 	 * 為一個tag和attendees新增關聯
 	 * 
 	 * @param attendeesTag
@@ -33,10 +59,19 @@ public interface AttendeesTagService extends IService<AttendeesTag> {
 	void addAttendeesTag(AttendeesTag attendeesTag);
 
 	/**
-	 * 移除此 tag 與多位 attendees 關聯
+	 * 根據標籤 ID 刪除多個與會者 關聯
 	 * 
 	 * @param tagId
 	 * @param attendeessToRemove
 	 */
-	void removeTagRelationsForAttendeess(Long tagId, Set<Long> attendeessToRemove);
+	void removeAttendeesFromTag(Long tagId, Set<Long> attendeessToRemove);
+
+	/**
+	 * 根據參加者 ID 刪除多個標籤關聯
+	 * 
+	 * @param attendeesId
+	 * @param tagsToRemove
+	 */
+	void removeTagsFromAttendee(Long attendeesId, Set<Long> tagsToRemove);
+
 }

@@ -73,7 +73,6 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	private final MemberMapper memberMapper;
 	private final AttendeesConvert attendeesConvert;
 	private final AttendeesTagService attendeesTagService;
-	private final AttendeesTagMapper attendeesTagMapper;
 
 	private final TagService tagService;
 	private final TagConvert tagConvert;
@@ -282,9 +281,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		attendeesTagVO.setMember(member);
 
 		// 3.查詢該attendees所有關聯的tag
-		LambdaQueryWrapper<AttendeesTag> attendeesTagWrapper = new LambdaQueryWrapper<>();
-		attendeesTagWrapper.eq(AttendeesTag::getAttendeesId, attendeesId);
-		List<AttendeesTag> attendeesTagList = attendeesTagMapper.selectList(attendeesTagWrapper);
+		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesId(attendeesId);
 
 		// 如果沒有任何關聯,就可以直接返回了
 		if (attendeesTagList.isEmpty()) {
@@ -336,8 +333,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		}
 
 		// 4. 批量查詢 AttendeesTag 關係表，獲取 attendeesId 对应的 tagId
-		List<AttendeesTag> attendeesTagList = attendeesTagMapper
-				.selectList(new LambdaQueryWrapper<AttendeesTag>().in(AttendeesTag::getAttendeesId, attendeesIds));
+		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesIds(attendeesIds);
 
 		// 5. 將 attendeesId 對應的 tagId 歸類，key 為attendeesId , value 為 tagIdList
 		Map<Long, List<Long>> attendeesTagMap = attendeesTagList.stream()
@@ -462,8 +458,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		// 這邊attendeesIds不可能沒有元素, 因為attendeesId 和 memberId是 1:1關係
 		// 5. 批量查詢 AttendeesTag 關係表，獲取 attendeesId 对应的 tagId
-		List<AttendeesTag> attendeesTagList = attendeesTagMapper
-				.selectList(new LambdaQueryWrapper<AttendeesTag>().in(AttendeesTag::getAttendeesId, attendeesIds));
+		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesIds(attendeesIds);
 
 		// 6. 將 attendeesId 對應的 tagId 歸類，key 為attendeesId , value 為 tagIdList
 		Map<Long, List<Long>> attendeesTagMap = attendeesTagList.stream()
@@ -540,9 +535,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	public void assignTagToAttendees(List<Long> targetTagIdList, Long attendeesId) {
 
 		// 1. 查詢當前 attendees 的所有關聯 tag
-		LambdaQueryWrapper<AttendeesTag> currentQueryWrapper = new LambdaQueryWrapper<>();
-		currentQueryWrapper.eq(AttendeesTag::getAttendeesId, attendeesId);
-		List<AttendeesTag> currentAttendeesTags = attendeesTagMapper.selectList(currentQueryWrapper);
+		List<AttendeesTag> currentAttendeesTags = attendeesTagService.getAttendeesTagByAttendeesId(attendeesId);
 
 		// 2. 提取當前關聯的 tagId Set
 		Set<Long> currentTagIdSet = currentAttendeesTags.stream()
@@ -564,10 +557,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		// 6. 執行刪除操作，如果 需刪除集合 中不為空，則開始刪除
 		if (!tagsToRemove.isEmpty()) {
-			LambdaQueryWrapper<AttendeesTag> deleteAttendeesTagWrapper = new LambdaQueryWrapper<>();
-			deleteAttendeesTagWrapper.eq(AttendeesTag::getAttendeesId, attendeesId)
-					.in(AttendeesTag::getTagId, tagsToRemove);
-			attendeesTagMapper.delete(deleteAttendeesTagWrapper);
+			attendeesTagService.removeTagsFromAttendee(attendeesId, tagsToRemove);
 		}
 
 		// 7. 執行新增操作，如果 需新增集合 中不為空，則開始新增
@@ -581,7 +571,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 			// 批量插入
 			for (AttendeesTag attendeesTag : newAttendeesTags) {
-				attendeesTagMapper.insert(attendeesTag);
+				attendeesTagService.addAttendeesTag(attendeesTag);
 			}
 		}
 	}
@@ -612,9 +602,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			attendeesCount = baseMapper.selectCount(null);
 		} else {
 			// 透過tag先找到符合的attendees關聯
-			LambdaQueryWrapper<AttendeesTag> attendeesTagWrapper = new LambdaQueryWrapper<>();
-			attendeesTagWrapper.in(AttendeesTag::getTagId, tagIdList);
-			List<AttendeesTag> attendeesTagList = attendeesTagMapper.selectList(attendeesTagWrapper);
+			List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByTagIds(tagIdList);
 
 			// 從關聯中取出attendeesId ，使用Set去重複的會員，因為會員有可能有多個Tag
 			attendeesIdSet = attendeesTagList.stream().map(AttendeesTag::getAttendeesId).collect(Collectors.toSet());
