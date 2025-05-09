@@ -18,7 +18,7 @@ public class CheckinRecordVO {
 	private String location;
 
 	@Schema(description = "動作類型, 1=簽到, 2=簽退")
-	private Byte actionType;
+	private Integer actionType;
 
 	@Schema(description = "簽到/退時間")
 	private LocalDateTime actionTime;
