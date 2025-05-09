@@ -35,7 +35,6 @@ import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.exception.EmailException;
 import tw.com.ticbcs.manager.MemberManager;
 import tw.com.ticbcs.mapper.AttendeesMapper;
-import tw.com.ticbcs.mapper.TagMapper;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
@@ -68,11 +67,8 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	private final MemberManager memberManager;
 	private final AttendeesConvert attendeesConvert;
 	private final AttendeesTagService attendeesTagService;
-
 	private final TagService tagService;
 	private final TagConvert tagConvert;
-	private final TagMapper tagMapper;
-
 	private final AsyncService asyncService;
 
 	@Qualifier("businessRedissonClient")
@@ -288,12 +284,10 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				.collect(Collectors.toList());
 
 		// 5.去Tag表中查詢實際的Tag資料，並轉換成Set集合
-		LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
-		tagWrapper.in(Tag::getTagId, tagIds);
-		List<Tag> tagList = tagMapper.selectList(tagWrapper);
+		List<Tag> tagList = tagService.getTagByTagIds(tagIds);
 		Set<Tag> tagSet = new HashSet<>(tagList);
 
-		// 5.最後填入attendeesTagVO對象並返回
+		// 6.最後填入attendeesTagVO對象並返回
 		attendeesTagVO.setTagSet(tagSet);
 		return attendeesTagVO;
 
@@ -360,7 +354,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		}
 
-		List<Tag> tagList = tagMapper.selectList(new LambdaQueryWrapper<Tag>().in(Tag::getTagId, tagIds));
+		List<Tag> tagList = tagService.getTagByTagIds(tagIds);
 
 		// 8. 將 Tag 按 tagId 歸類
 		Map<Long, Tag> tagMap = tagList.stream().collect(Collectors.toMap(Tag::getTagId, tag -> tag));
@@ -464,7 +458,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		// 定義tagList
 		List<Tag> tagList;
-		tagList = tagMapper.selectList(new LambdaQueryWrapper<Tag>().in(Tag::getTagId, tagIds));
+		tagList = tagService.getTagByTagIds(tagIds);
 
 		// 9. 將 Tag 按 tagId 歸類
 		Map<Long, Tag> tagMap = tagList.stream().collect(Collectors.toMap(Tag::getTagId, tag -> tag));

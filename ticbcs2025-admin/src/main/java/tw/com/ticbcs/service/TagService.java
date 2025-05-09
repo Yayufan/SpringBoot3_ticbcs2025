@@ -1,7 +1,7 @@
 package tw.com.ticbcs.service;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -46,12 +46,12 @@ public interface TagService extends IService<Tag> {
 	Tag getTagByTypeAndName(String type, String name);
 
 	/**
-	 * 查詢處在這個tagIdSet 的所有Tag
+	 * 查詢處在這個tagIds 的所有Tag
 	 * 
-	 * @param tagIdSet
+	 * @param tagIds
 	 * @return
 	 */
-	List<Tag> getTagByTagIdSet(Set<Long> tagIdSet);
+	List<Tag> getTagByTagIds(Collection<Long> tagIds);
 
 	/**
 	 * 獲取全部標籤(分頁)
@@ -131,8 +131,7 @@ public interface TagService extends IService<Tag> {
 	 * @param tagId
 	 */
 	void assignAttendeesToTag(List<Long> targetAttendeesIdList, Long tagId);
-	
-	
+
 	/**
 	 * 原色 #4A7056（一個深綠色） → 做「同色系明亮度/飽和度漸變」
 	 * 
