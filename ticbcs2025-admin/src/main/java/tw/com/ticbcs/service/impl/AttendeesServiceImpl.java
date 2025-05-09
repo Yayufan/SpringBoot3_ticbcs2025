@@ -76,12 +76,13 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Override
 	public AttendeesVO getAttendees(Long id) {
-		// 先查詢到與會者自己的紀錄
+		// 1.先查詢到與會者自己的紀錄
 		Attendees attendees = baseMapper.selectById(id);
 
-		// 從attendees的 attendeesId中找到與會者的基本資料
+		// 2.從attendees的 attendeesId中找到與會者的基本資料
 		Member member = memberManager.getMemberById(attendees.getMemberId());
 
+		// 3.attendees 轉換成 VO
 		AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
 		attendeesVO.setMember(member);
 
@@ -90,47 +91,57 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Override
 	public List<AttendeesVO> getAttendeesList() {
+		// 1.查詢所有 attendees
 		List<Attendees> attendeesList = baseMapper.selectList(null);
 
-		// 從attendees的 attendeesId中找到與會者的基本資料
-		List<Member> memberList = memberManager.getAllMembersEfficiently();
-
-		Map<Long, Member> memberIdToMemberMap = memberList.stream()
-				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
-
-		List<AttendeesVO> attendeesVOList = attendeesList.stream().map(attendees -> {
-			AttendeesVO vo = attendeesConvert.entityToVO(attendees);
-			vo.setMember(memberIdToMemberMap.get(attendees.getMemberId()));
-			return vo;
-		}).collect(Collectors.toList());
+		// 2.透過私有方法轉換成VOList
+		List<AttendeesVO> attendeesVOList = this.convertToAttendeesVO(attendeesList);
 
 		return attendeesVOList;
 	}
 
 	@Override
 	public IPage<AttendeesVO> getAttendeesPage(Page<Attendees> page) {
-		// 查詢attendees 分頁對象
+		// 1.查詢所有 attendees 分頁對象
 		Page<Attendees> attendeesPage = baseMapper.selectPage(page, null);
 
-		// 從attendees的 memberId 中找到與會者的基本資料
-		List<Member> memberList = memberManager.getAllMembersEfficiently();
+		// 2.透過私有方法轉換成VOList
+		List<AttendeesVO> attendeesVOList = this.convertToAttendeesVO(attendeesPage.getRecords());
 
-		Map<Long, Member> memberIdToMemberMap = memberList.stream()
-				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
-
-		// 資料轉換成VO
-		List<AttendeesVO> attendeesVOList = attendeesPage.getRecords().stream().map(attendees -> {
-			AttendeesVO vo = attendeesConvert.entityToVO(attendees);
-			vo.setMember(memberIdToMemberMap.get(attendees.getMemberId()));
-			return vo;
-		}).collect(Collectors.toList());
-
-		// 封裝成VOpage
+		// 3.封裝成VOpage
 		Page<AttendeesVO> attendeesVOPage = new Page<>(attendeesPage.getCurrent(), attendeesPage.getSize(),
 				attendeesPage.getTotal());
 		attendeesVOPage.setRecords(attendeesVOList);
 
 		return attendeesVOPage;
+	}
+
+	/**
+	 * 私有方法用來將attendeesList 轉換成 attendeesVOList
+	 * 
+	 * @param attendeesList
+	 * @return
+	 */
+	private List<AttendeesVO> convertToAttendeesVO(List<Attendees> attendeesList) {
+
+		// 1.從attendeesList提取memberIds , 避免全表查詢member
+		Set<Long> memberIds = attendeesList.stream().map(Attendees::getMemberId).collect(Collectors.toSet());
+
+		// 2.透過AttendeesList中提取的memberIds 中找到與會者的基本資料
+		List<Member> memberList = memberManager.getMembersByIds(memberIds);
+
+		// 3.建立映射
+		Map<Long, Member> memberMap = memberList.stream()
+				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
+
+		// 4.資料轉換成VO
+		List<AttendeesVO> attendeesVOList = attendeesList.stream().map(attendees -> {
+			AttendeesVO vo = attendeesConvert.entityToVO(attendees);
+			vo.setMember(memberMap.get(attendees.getMemberId()));
+			return vo;
+		}).collect(Collectors.toList());
+
+		return attendeesVOList;
 	}
 
 	@Override
@@ -240,7 +251,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		List<Member> memberList = memberManager.getAllMembersEfficiently();
 
 		// 訂單轉成一對一 Map，key為 memberId, value為訂單本身
-		Map<Long, Member> memberIdToMemberMap = memberList.stream()
+		Map<Long, Member> memberMap = memberList.stream()
 				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
 
 		// 獲取所有與會者
@@ -249,7 +260,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		// 資料轉換成Excel
 		List<AttendeesExcel> excelData = attendeesList.stream().map(attendees -> {
 			AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
-			attendeesVO.setMember(memberIdToMemberMap.get(attendees.getMemberId()));
+			attendeesVO.setMember(memberMap.get(attendees.getMemberId()));
 			AttendeesExcel attendeesExcel = attendeesConvert.voToExcel(attendeesVO);
 			return attendeesExcel;
 
@@ -296,8 +307,6 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	@Override
 	public IPage<AttendeesTagVO> getAttendeesTagVOPage(Page<Attendees> pageInfo) {
 
-		IPage<AttendeesTagVO> voPage;
-
 		// 1.以attendees當作基底查詢,越新的擺越前面
 		LambdaQueryWrapper<Attendees> attendeesWrapper = new LambdaQueryWrapper<>();
 		attendeesWrapper.orderByDesc(Attendees::getAttendeesId);
@@ -305,85 +314,99 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		// 2.查詢 AttendeesPage (分頁)
 		IPage<Attendees> attendeesPage = baseMapper.selectPage(pageInfo, attendeesWrapper);
 
-		// 3. 獲取所有 attendeesId 列表，
-		List<Long> attendeesIds = attendeesPage.getRecords()
-				.stream()
-				.map(Attendees::getAttendeesId)
-				.collect(Collectors.toList());
+		// 初始化這兩個數組, 因為是1:1關係，所以size可以直接配初始容量
+		List<Long> attendeesIds = new ArrayList<>(attendeesPage.getRecords().size());
+		List<Long> memberIds = new ArrayList<>(attendeesPage.getRecords().size());
 
+		// 3.一次遍歷,填充 attendeesId 和 memberId 列表，mybatis plus回傳的List永不為null,就算元素為空也不觸發foreach
+		for (Attendees attendee : attendeesPage.getRecords()) {
+			attendeesIds.add(attendee.getAttendeesId());
+			memberIds.add(attendee.getMemberId());
+		}
+
+		// 4.先創建要返回的VOPage對象, 最後在塞record即可
+		IPage<AttendeesTagVO> voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), attendeesPage.getTotal());
+
+		// 5.如果沒有與會者,也就是資料庫還沒有資料
 		if (attendeesIds.isEmpty()) {
 			System.out.println("沒有與會者,所以直接返回");
-
 			voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), attendeesPage.getTotal());
-			voPage.setRecords(null);
-
+			voPage.setRecords(Collections.emptyList());
 			return voPage;
 		}
 
 		// 4. 批量查詢 AttendeesTag 關係表，獲取 attendeesId 对应的 tagId
 		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesIds(attendeesIds);
 
-		// 5. 將 attendeesId 對應的 tagId 歸類，key 為attendeesId , value 為 tagIdList
-		Map<Long, List<Long>> attendeesTagMap = attendeesTagList.stream()
-				.collect(Collectors.groupingBy(AttendeesTag::getAttendeesId,
-						Collectors.mapping(AttendeesTag::getTagId, Collectors.toList())));
+		//5.先定義attendeesTagMap 和 tagIds 
+		Map<Long, List<Long>> attendeesTagMap = new HashMap<>();
+		Set<Long> tagIds = new HashSet<>();
 
-		// 6. 獲取所有 tagId 列表
-		List<Long> tagIds = attendeesTagList.stream()
-				.map(AttendeesTag::getTagId)
-				.distinct()
-				.collect(Collectors.toList());
+		// 6.在一次遍歷中蒐集兩者
+		for (AttendeesTag at : attendeesTagList) {
+			// 1. 分組：attendeesId → List<tagId>
+			/**
+			 * 
+			 * 如果 attendeesTagMap 中已經存在 at.getAttendeesId() 這個鍵：
+			 * 
+			 * 直接返回與該鍵關聯的現有 List<Long> (不會創建新的 ArrayList)
+			 * Lambda 表達式 k -> new ArrayList<>() 不會被執行
+			 * 
+			 * 
+			 * 如果 attendeesTagMap 中不存在這個鍵：
+			 * 
+			 * 執行 Lambda 表達式創建新的 ArrayList<>()
+			 * 將這個新列表與鍵 at.getAttendeesId() 關聯並存入 attendeesTagMap
+			 * 返回這個新列表
+			 * 
+			 * 
+			 * 無論是哪種情況，computeIfAbsent 都會返回一個與該鍵關聯的 List<Long>，然後調用 .add(at.getTagId())
+			 * 將標籤ID添加到這個列表中。
+			 * 
+			 * computeIfAbsent 和後續的 .add() 操作實際上是兩個分開的步驟
+			 * 
+			 */
+			attendeesTagMap.computeIfAbsent(at.getAttendeesId(), k -> new ArrayList<>()).add(at.getTagId());
 
-		// 7. 批量查詢所有的 Tag，如果關聯的tagIds為空, 那就不用查了，直接返回
-		if (tagIds.isEmpty()) {
-			System.out.println("沒有任何tag關聯,所以直接返回");
-			List<AttendeesTagVO> attendeesTagVOList = attendeesPage.getRecords().stream().map(attendees -> {
-				AttendeesTagVO vo = attendeesConvert.entityToAttendeesTagVO(attendees);
-				vo.setTagSet(new HashSet<>());
-
-				// 看有沒有額外要補充的
-				Member member = memberManager.getMemberById(attendees.getMemberId());
-				vo.setMember(member);
-
-				return vo;
-			}).collect(Collectors.toList());
-			voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), attendeesPage.getTotal());
-			voPage.setRecords(attendeesTagVOList);
-
-			return voPage;
-
+			// 2. 收集所有 tagId
+			tagIds.add(at.getTagId());
 		}
 
-		List<Tag> tagList = tagService.getTagByTagIds(tagIds);
+		// 7. 批量查 Tag / Member (避免 N+1)
+		// Tag Map
+		Map<Long, Tag> tagMap = tagIds.isEmpty() ? Collections.emptyMap()
+				: tagService.getTagByTagIds(new ArrayList<>(tagIds))
+						.stream()
+						.collect(Collectors.toMap(Tag::getTagId, tag -> tag));
 
-		// 8. 將 Tag 按 tagId 歸類
-		Map<Long, Tag> tagMap = tagList.stream().collect(Collectors.toMap(Tag::getTagId, tag -> tag));
+		// Member Map
+		Map<Long, Member> memberMap = memberIds.isEmpty() ? Collections.emptyMap()
+				: memberManager.getMembersByIds(new ArrayList<>(memberIds))
+						.stream()
+						.collect(Collectors.toMap(Member::getMemberId, member -> member));
 
-		// 9. 組裝 VO 數據
+		// 9. 組裝 VO
 		List<AttendeesTagVO> voList = attendeesPage.getRecords().stream().map(attendees -> {
 			AttendeesTagVO vo = attendeesConvert.entityToAttendeesTagVO(attendees);
-			// 獲取attendees的基本資料
-			Member member = memberManager.getMemberById(attendees.getMemberId());
-			vo.setMember(member);
 
-			// 獲取該 attendeesId 關聯的 tagId 列表
+			// 填充 Member
+			vo.setMember(memberMap.get(attendees.getMemberId()));
+
+			// 填充 Tags
 			List<Long> relatedTagIds = attendeesTagMap.getOrDefault(attendees.getAttendeesId(),
 					Collections.emptyList());
-			// 獲取所有對應的 Tag
-			List<Tag> tags = relatedTagIds.stream()
+			Set<Tag> tagSet = relatedTagIds.stream()
 					.map(tagMap::get)
-					.filter(Objects::nonNull) // 避免空值
-					.collect(Collectors.toList());
-			Set<Tag> tagSet = new HashSet<>(tags);
+					.filter(Objects::nonNull)
+					.collect(Collectors.toSet());
+
 			vo.setTagSet(tagSet);
 
 			return vo;
 		}).collect(Collectors.toList());
 
-		// 10. 重新封装 VO 的分頁對象
-		voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), attendeesPage.getTotal());
+		// 10. 塞回 VO 分頁
 		voPage.setRecords(voList);
-
 		return voPage;
 
 	}
@@ -397,10 +420,10 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		List<Member> memberList = memberManager.getMembersByQuery(queryText);
 
 		// 2. 同時建立 memberId → Member 映射，並提取 memberIds
-		Map<Long, Member> memberIdToMemberMap = new HashMap<>();
+		Map<Long, Member> memberMap = new HashMap<>();
 		List<Long> memberIds = new ArrayList<>();
 		for (Member member : memberList) {
-			memberIdToMemberMap.put(member.getMemberId(), member);
+			memberMap.put(member.getMemberId(), member);
 			memberIds.add(member.getMemberId());
 		}
 
@@ -444,7 +467,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 				// 轉換成VO對象後，透過map映射找到Member
 				AttendeesTagVO vo = attendeesConvert.entityToAttendeesTagVO(attendees);
-				Member member = memberIdToMemberMap.get(attendees.getMemberId());
+				Member member = memberMap.get(attendees.getMemberId());
 				// 組裝vo後返回
 				vo.setMember(member);
 				vo.setTagSet(new HashSet<>());
@@ -469,7 +492,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			// 將查找到的Attendees,轉換成VO對象
 			AttendeesTagVO vo = attendeesConvert.entityToAttendeesTagVO(attendees);
 			// 透過 mapping 找到member, 並組裝進VO
-			Member member = memberIdToMemberMap.get(attendees.getMemberId());
+			Member member = memberMap.get(attendees.getMemberId());
 			vo.setMember(member);
 
 			// 獲取該 attendeesId 關聯的 tagId 列表
@@ -624,13 +647,13 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		List<Member> memberList = memberManager.getMembersByIds(memberIds);
 
-		Map<Long, Member> memberIdToMemberMap = memberList.stream()
+		Map<Long, Member> memberMap = memberList.stream()
 				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
 
 		// 組裝 VO
 		return attendeesList.stream().map(attendees -> {
 			AttendeesVO vo = attendeesConvert.entityToVO(attendees);
-			vo.setMember(memberIdToMemberMap.get(attendees.getMemberId()));
+			vo.setMember(memberMap.get(attendees.getMemberId()));
 			return vo;
 		}).collect(Collectors.toList());
 	}
