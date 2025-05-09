@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -34,11 +33,9 @@ import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.exception.EmailException;
+import tw.com.ticbcs.manager.MemberManager;
 import tw.com.ticbcs.mapper.AttendeesMapper;
-import tw.com.ticbcs.mapper.AttendeesTagMapper;
-import tw.com.ticbcs.mapper.MemberMapper;
 import tw.com.ticbcs.mapper.TagMapper;
-import tw.com.ticbcs.pojo.BO.MemberExcelRaw;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
@@ -47,10 +44,8 @@ import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.AttendeesTag;
 import tw.com.ticbcs.pojo.entity.Member;
-import tw.com.ticbcs.pojo.entity.Orders;
 import tw.com.ticbcs.pojo.entity.Tag;
 import tw.com.ticbcs.pojo.excelPojo.AttendeesExcel;
-import tw.com.ticbcs.pojo.excelPojo.MemberExcel;
 import tw.com.ticbcs.service.AsyncService;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.AttendeesTagService;
@@ -70,7 +65,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	private static final String DAILY_EMAIL_QUOTA_KEY = "email:dailyQuota";
 
-	private final MemberMapper memberMapper;
+	private final MemberManager memberManager;
 	private final AttendeesConvert attendeesConvert;
 	private final AttendeesTagService attendeesTagService;
 
@@ -89,9 +84,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		Attendees attendees = baseMapper.selectById(id);
 
 		// 從attendees的 attendeesId中找到與會者的基本資料
-		LambdaQueryWrapper<Member> attendeesWrapper = new LambdaQueryWrapper<>();
-		attendeesWrapper.eq(Member::getMemberId, attendees.getMemberId());
-		Member member = memberMapper.selectOne(attendeesWrapper);
+		Member member = memberManager.getMemberById(attendees.getMemberId());
 
 		AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
 		attendeesVO.setMember(member);
@@ -104,7 +97,8 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		List<Attendees> attendeesList = baseMapper.selectList(null);
 
 		// 從attendees的 attendeesId中找到與會者的基本資料
-		List<Member> memberList = memberMapper.selectList(null);
+		List<Member> memberList = memberManager.getAllMembersEfficiently();
+
 		Map<Long, Member> memberIdToMemberMap = memberList.stream()
 				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
 
@@ -123,7 +117,8 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		Page<Attendees> attendeesPage = baseMapper.selectPage(page, null);
 
 		// 從attendees的 memberId 中找到與會者的基本資料
-		List<Member> memberList = memberMapper.selectList(null);
+		List<Member> memberList = memberManager.getAllMembersEfficiently();
+
 		Map<Long, Member> memberIdToMemberMap = memberList.stream()
 				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
 
@@ -246,7 +241,8 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		response.setHeader("Content-disposition", "attachment;filename*=" + fileName + ".xlsx");
 
 		// 查詢所有會員，用來填充與會者的基本資訊
-		List<Member> memberList = memberMapper.selectMembers();
+		List<Member> memberList = memberManager.getAllMembersEfficiently();
+
 		// 訂單轉成一對一 Map，key為 memberId, value為訂單本身
 		Map<Long, Member> memberIdToMemberMap = memberList.stream()
 				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
@@ -275,9 +271,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		AttendeesTagVO attendeesTagVO = attendeesConvert.entityToAttendeesTagVO(attendees);
 
 		// 2.查詢attendees 的基本資料，並放入Member屬性
-		LambdaQueryWrapper<Member> memberWrapper = new LambdaQueryWrapper<>();
-		memberWrapper.eq(Member::getMemberId, attendees.getMemberId());
-		Member member = memberMapper.selectOne(memberWrapper);
+		Member member = memberManager.getMemberById(attendees.getMemberId());
 		attendeesTagVO.setMember(member);
 
 		// 3.查詢該attendees所有關聯的tag
@@ -354,9 +348,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				vo.setTagSet(new HashSet<>());
 
 				// 看有沒有額外要補充的
-				LambdaQueryWrapper<Member> memberWrapper = new LambdaQueryWrapper<>();
-				memberWrapper.eq(Member::getMemberId, attendees.getMemberId());
-				Member member = memberMapper.selectOne(memberWrapper);
+				Member member = memberManager.getMemberById(attendees.getMemberId());
 				vo.setMember(member);
 
 				return vo;
@@ -377,9 +369,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		List<AttendeesTagVO> voList = attendeesPage.getRecords().stream().map(attendees -> {
 			AttendeesTagVO vo = attendeesConvert.entityToAttendeesTagVO(attendees);
 			// 獲取attendees的基本資料
-			LambdaQueryWrapper<Member> memberWrapper = new LambdaQueryWrapper<>();
-			memberWrapper.eq(Member::getMemberId, attendees.getMemberId());
-			Member member = memberMapper.selectOne(memberWrapper);
+			Member member = memberManager.getMemberById(attendees.getMemberId());
 			vo.setMember(member);
 
 			// 獲取該 attendeesId 關聯的 tagId 列表
@@ -410,25 +400,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		IPage<AttendeesTagVO> voPage;
 
 		// 1.因為能進與會者其實沒有單獨的資訊了，所以是查詢會員資訊，queryText都是member的資訊
-		LambdaQueryWrapper<Member> memberWrapper = new LambdaQueryWrapper<>();
-
-		// 當 queryText 不為空字串、空格字串、Null 時才加入篩選條件
-		// 且attendeesIdsByStatus裡面元素不為空，則加入篩選條件
-		memberWrapper.and(StringUtils.isNotBlank(queryText),
-				wrapper -> wrapper.like(Member::getChineseName, queryText)
-						.or()
-						.like(Member::getFirstName, queryText)
-						.or()
-						.like(Member::getLastName, queryText)
-						.or()
-						.like(Member::getPhone, queryText)
-						.or()
-						.like(Member::getIdCard, queryText)
-						.or()
-						.like(Member::getEmail, queryText));
-
-		//就算沒資料也是空數組
-		List<Member> memberList = memberMapper.selectList(memberWrapper);
+		List<Member> memberList = memberManager.getMembersByQuery(queryText);
 
 		// 2. 同時建立 memberId → Member 映射，並提取 memberIds
 		Map<Long, Member> memberIdToMemberMap = new HashMap<>();
@@ -656,7 +628,8 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				.filter(Objects::nonNull)
 				.collect(Collectors.toSet());
 
-		List<Member> memberList = memberMapper.selectBatchIds(memberIds);
+		List<Member> memberList = memberManager.getMembersByIds(memberIds);
+
 		Map<Long, Member> memberIdToMemberMap = memberList.stream()
 				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
 
