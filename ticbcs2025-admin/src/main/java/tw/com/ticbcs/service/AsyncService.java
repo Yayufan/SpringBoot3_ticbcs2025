@@ -1,8 +1,11 @@
 package tw.com.ticbcs.service;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.core.io.ByteArrayResource;
+
+import com.google.zxing.WriterException;
 
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
@@ -57,7 +60,6 @@ public interface AsyncService {
 	 */
 	void batchSendEmailToCorrespondingAuthor(List<Paper> paperList, SendEmailDTO sendEmailDTO);
 
-	
 	/**
 	 * 呼叫時觸發一個線程，批量寄信給 審稿委員 ，裡面會根據寄出10封信件等3秒的模式，避免控制寄信速率
 	 * 
@@ -66,16 +68,15 @@ public interface AsyncService {
 	 */
 	void batchSendEmailToPaperReviewer(List<PaperReviewer> paperReviewerList, SendEmailDTO sendEmailDTO);
 
-	
-	
 	/**
 	 * 呼叫時觸發一個線程，批量寄信給 與會者 ，裡面會根據寄出10封信件等3秒的模式，避免控制寄信速率
 	 * 
 	 * @param attendeesList
 	 * @param sendEmailDTO
+	 * @throws IOException
+	 * @throws WriterException
 	 */
-	void batchSendEmailToAttendeess(List<AttendeesVO> attendeesList, SendEmailDTO sendEmailDTO);
-		
-	
-	
+	void batchSendEmailToAttendeess(List<AttendeesVO> attendeesList, SendEmailDTO sendEmailDTO)
+			throws WriterException, IOException;
+
 }

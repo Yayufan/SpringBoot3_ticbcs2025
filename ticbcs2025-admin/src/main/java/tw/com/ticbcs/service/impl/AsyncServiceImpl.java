@@ -1,5 +1,7 @@
 package tw.com.ticbcs.service.impl;
 
+import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -10,6 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
+import com.google.zxing.WriterException;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -18,11 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 import tw.com.ticbcs.exception.RegistrationInfoException;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
-import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.Member;
 import tw.com.ticbcs.pojo.entity.Paper;
 import tw.com.ticbcs.pojo.entity.PaperReviewer;
 import tw.com.ticbcs.service.AsyncService;
+import tw.com.ticbcs.utils.QrcodeUtil;
 
 @Slf4j
 @Service
@@ -420,7 +423,8 @@ public class AsyncServiceImpl implements AsyncService {
 
 	@Override
 	@Async("taskExecutor")
-	public void batchSendEmailToAttendeess(List<AttendeesVO> attendeesVOList, SendEmailDTO sendEmailDTO) {
+	public void batchSendEmailToAttendeess(List<AttendeesVO> attendeesVOList, SendEmailDTO sendEmailDTO)
+			throws WriterException, IOException {
 		// 批量寄信數量
 		int batchSize = 10;
 		// 批量寄信間隔 3000 毫秒
@@ -464,10 +468,21 @@ public class AsyncServiceImpl implements AsyncService {
 
 	}
 
-	private String replaceAttendeesMergeTag(String content, AttendeesVO attendeesVO) {
+	private String replaceAttendeesMergeTag(String content, AttendeesVO attendeesVO)
+			throws WriterException, IOException {
+
 		String newContent;
 
-		newContent = content.replace("{{QRcode}}", "轉成QRcode圖片")
+		// 生成 QR Code 圖片，大小 200x200
+		byte[] qrCodeImage = QrcodeUtil.generateBase64QRCode(attendeesVO.getAttendeesId().toString(), 200, 200);
+
+		// 3. 將 QR Code 圖片轉換為 Base64 字串
+		String base64QRcode = Base64.getEncoder().encodeToString(qrCodeImage);
+
+		// 4. 替換 {{QRcode}} 標籤為 <img> 標籤，並將 Base64 圖片嵌入其中
+		// 姓名也進行轉換
+		newContent = content
+				.replace("{{QRcode}}", "<img src=\"data:image/png;base64," + base64QRcode + "\" alt=\"QR Code\" />")
 				.replace("{{name}}", attendeesVO.getMember().getChineseName());
 
 		return newContent;

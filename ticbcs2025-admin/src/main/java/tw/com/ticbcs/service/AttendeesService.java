@@ -7,6 +7,7 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.google.zxing.WriterException;
 
 import jakarta.servlet.http.HttpServletResponse;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
@@ -89,7 +90,9 @@ public interface AttendeesService extends IService<Attendees> {
 	 * 
 	 * @param tagIdList
 	 * @param sendEmailDTO
+	 * @throws IOException
+	 * @throws WriterException
 	 */
-	void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO);
+	void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO) throws WriterException, IOException;
 
 }

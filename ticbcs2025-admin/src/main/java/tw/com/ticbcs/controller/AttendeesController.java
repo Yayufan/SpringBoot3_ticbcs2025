@@ -1,8 +1,11 @@
 package tw.com.ticbcs.controller;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.zxing.WriterException;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,16 +30,15 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.pojo.DTO.SendEmailByTagDTO;
-import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagToAttendeesDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.service.AttendeesService;
+import tw.com.ticbcs.utils.QrcodeUtil;
 import tw.com.ticbcs.utils.R;
 
 /**
@@ -176,15 +181,33 @@ public class AttendeesController {
 
 	}
 
-	/** 以下與寄送給與會者信件有關 */
+	/**
+	 * 以下與寄送給與會者信件有關
+	 * 
+	 * @throws IOException
+	 * @throws WriterException
+	 */
 	@Operation(summary = "寄送信件給與會者，可根據tag來篩選寄送")
 	@Parameters({
 			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
 	@SaCheckRole("super-admin")
 	@PostMapping("send-email")
-	public R<Void> sendEmailToAttendeess(@Validated @RequestBody SendEmailByTagDTO sendEmailByTagDTO) {
+	public R<Void> sendEmailToAttendeess(@Validated @RequestBody SendEmailByTagDTO sendEmailByTagDTO)
+			throws WriterException, IOException {
 		attendeesService.sendEmailToAttendeess(sendEmailByTagDTO.getTagIdList(), sendEmailByTagDTO.getSendEmailDTO());
 		return R.ok();
+
+	}
+
+	/** 跟QRcode產生有關 */
+	@Operation(summary = "根據attendeesId 產生QRcode，需用Base64 解碼")
+	@GetMapping(value = "/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
+	public byte[] generateQRCode(@RequestParam Long attendeesId, @RequestParam(defaultValue = "250") int width,
+			@RequestParam(defaultValue = "250") int height) throws Exception {
+
+		byte[] qrCodeImage = QrcodeUtil.generateBase64QRCode(attendeesId.toString(), width, height);
+
+		return qrCodeImage;
 
 	}
 
