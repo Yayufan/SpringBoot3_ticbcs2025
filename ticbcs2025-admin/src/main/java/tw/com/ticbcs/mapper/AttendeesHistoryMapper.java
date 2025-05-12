@@ -1,7 +1,10 @@
 package tw.com.ticbcs.mapper;
 
-import tw.com.ticbcs.pojo.entity.AttendeesHistory;
+import org.apache.ibatis.annotations.Update;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import tw.com.ticbcs.pojo.entity.AttendeesHistory;
 
 /**
  * <p>
@@ -13,4 +16,10 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface AttendeesHistoryMapper extends BaseMapper<AttendeesHistory> {
 
+	/**
+	 * 快速清空整張表,因為舊資料通常是別人匯進來的,所以沒什麼關係
+	 * 
+	 */
+	@Update("TRUNCATE TABLE attendees_history")
+	void cleanAllData();
 }

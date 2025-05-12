@@ -1,6 +1,8 @@
 package tw.com.ticbcs.controller;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.service.AttendeesHistoryService;
 import tw.com.ticbcs.utils.R;
@@ -37,44 +40,42 @@ import tw.com.ticbcs.utils.R;
 public class AttendeesHistoryController {
 
 	private final AttendeesHistoryService attendeesHistoryService;
-	
 
-    /**
-     * 下載Excel匯入模板 (CSV格式)
-     */
-    @Operation(summary = "下載往年與會者匯入模板 (CSV)")
-    @GetMapping("/excel-template")
-    public ResponseEntity<InputStreamResource> downloadTemplate() {
-        // 由 Service 生出 CSV 內容 (byte array)
-        byte[] templateContent = attendeesHistoryService.generateImportTemplate();
+	/**
+	 * 清除所有往年與會者資料
+	 */
+	@Operation(summary = "清除所有往年與會者資料")
+	@DeleteMapping("/clear")
+	public R<Void> clearAttendeesHistory() {
+		attendeesHistoryService.clearAllAttendeesHistory();
+		return R.ok("已清除所有資料");
+	}
 
-        ByteArrayInputStream bis = new ByteArrayInputStream(templateContent);
-        InputStreamResource resource = new InputStreamResource(bis);
+	/**
+	 * 下載Excel匯入模板
+	 * 
+	 * @throws IOException
+	 * 
+	 * @throws UnsupportedEncodingException
+	 */
+	@Operation(summary = "下載往年與會者匯入模板 (Excel)")
+	@GetMapping("/excel-template")
+	public void downloadTemplate(HttpServletResponse response) throws IOException {
+		// 由 Service 生出 excel 模板內容 (byte array)
+		attendeesHistoryService.generateImportTemplate(response);
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=attendees_history_template.csv")
-                .contentType(MediaType.parseMediaType("text/csv"))
-                .body(resource);
-    }
+	}
 
-    /**
-     * 匯入往年與會者名單 (Excel或CSV檔)
-     */
-    @Operation(summary = "匯入往年與會者名單 (Excel/CSV)")
-    @PostMapping("/import")
-    public R<Void> importAttendeesHistory(@RequestParam("file") MultipartFile file) {
-        attendeesHistoryService.importAttendeesHistory(file);
-        return R.ok("匯入成功");
-    }
+	/**
+	 * 匯入往年與會者名單 (Excel或CSV檔)
+	 * 
+	 * @throws IOException
+	 */
+	@Operation(summary = "匯入往年與會者名單 (Excel/CSV)")
+	@PostMapping("/import")
+	public R<Void> importAttendeesHistory(@RequestParam("file") MultipartFile file) throws IOException {
+		attendeesHistoryService.importAttendeesHistory(file);
+		return R.ok("匯入成功");
+	}
 
-    /**
-     * 清除所有往年與會者資料
-     */
-    @Operation(summary = "清除所有往年與會者資料")
-    @DeleteMapping("/clear")
-    public ResponseEntity<String> clearAttendeesHistory() {
-        attendeesHistoryService.clearAllAttendeesHistory();
-        return ResponseEntity.ok("已清除所有資料");
-    }
-	
 }

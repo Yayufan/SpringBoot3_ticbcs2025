@@ -1,18 +1,28 @@
 package tw.com.ticbcs.service.impl;
 
-import tw.com.ticbcs.pojo.entity.AttendeesHistory;
-import tw.com.ticbcs.mapper.AttendeesHistoryMapper;
-import tw.com.ticbcs.service.AttendeesHistoryService;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-
-import lombok.RequiredArgsConstructor;
-
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.alibaba.excel.EasyExcel;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import tw.com.ticbcs.exception.ImportExcelException;
+import tw.com.ticbcs.mapper.AttendeesHistoryMapper;
+import tw.com.ticbcs.pojo.entity.AttendeesHistory;
+import tw.com.ticbcs.pojo.excelPojo.AttendeesHistoryImportExcel;
+import tw.com.ticbcs.service.AttendeesHistoryService;
 
 /**
  * <p>
@@ -49,15 +59,71 @@ public class AttendeesHistoryServiceImpl extends ServiceImpl<AttendeesHistoryMap
 	}
 
 	@Override
-	public void importAttendeesHistory(MultipartFile file) {
-		// TODO Auto-generated method stub
-		
+	public void generateImportTemplate(HttpServletResponse response) throws IOException {
+
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		response.setCharacterEncoding("utf-8");
+		// 这里URLEncoder.encode可以防止中文乱码 ， 和easyexcel没有关系
+		String fileName = URLEncoder.encode("匯入模板", "UTF-8").replaceAll("\\+", "%20");
+		response.setHeader("Content-disposition", "attachment;filename*=" + fileName + ".xlsx");
+
+		// 模擬範例資料 (用1筆範例讓使用者看得懂)
+		AttendeesHistoryImportExcel example = new AttendeesHistoryImportExcel();
+		example.setYear(LocalDate.now().getYear() - 1);
+		example.setIdCard("A123456789");
+		example.setEmail("user@example.com");
+		example.setName("王小明");
+
+		EasyExcel.write(response.getOutputStream(), AttendeesHistoryImportExcel.class)
+				.sheet("範例模板")
+				.doWrite(List.of(example));
+
+	}
+
+	@Override
+	@Transactional
+	public void importAttendeesHistory(MultipartFile file) throws IOException {
+
+		List<AttendeesHistoryImportExcel> dataList = EasyExcel.read(file.getInputStream())
+				.head(AttendeesHistoryImportExcel.class)
+				.sheet()
+				.doReadSync();
+
+		List<AttendeesHistory> entities = dataList.stream().map(row -> {
+
+			// 確保年份和email都要存在
+			if (row.getYear() == null || row.getEmail() == null) {
+				// 丟出異常
+				throw new ImportExcelException("年份 和 Email 為必填項目");
+			}
+
+			AttendeesHistory entity = new AttendeesHistory();
+			entity.setYear(row.getYear()); // 年份補1月1日
+			entity.setIdCard(row.getIdCard());
+			entity.setEmail(row.getEmail());
+			entity.setName(row.getName());
+			return entity;
+		}).toList();
+
+		// 先收集所有匯入的 Email
+		Set<String> emailSet = entities.stream().map(AttendeesHistory::getEmail).collect(Collectors.toSet());
+
+		// 檢查是否有重複的 Email
+		if (emailSet.size() != entities.size()) {
+			throw new ImportExcelException("匯入資料中有重複的 Email ");
+		}
+
+		// 確認沒問題將資料新增進資料庫
+		for (AttendeesHistory entity : entities) {
+			baseMapper.insert(entity);
+		}
+
 	}
 
 	@Override
 	public void clearAllAttendeesHistory() {
-		// TODO Auto-generated method stub
-		
+		// 全數清空
+		baseMapper.cleanAllData();
 	}
 
 }

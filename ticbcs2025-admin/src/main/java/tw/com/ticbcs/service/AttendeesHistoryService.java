@@ -1,9 +1,13 @@
 package tw.com.ticbcs.service;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import tw.com.ticbcs.pojo.entity.AttendeesHistory;
 
 /**
@@ -26,8 +30,9 @@ public interface AttendeesHistoryService extends IService<AttendeesHistory> {
 	 */
 	Boolean existsAttendeesHistory(Integer year, String idCard, String email);
 
+	void generateImportTemplate(HttpServletResponse response) throws IOException;
 
-	void importAttendeesHistory(MultipartFile file);
+	void importAttendeesHistory(MultipartFile file) throws IOException;
 	
 	void clearAllAttendeesHistory();
 

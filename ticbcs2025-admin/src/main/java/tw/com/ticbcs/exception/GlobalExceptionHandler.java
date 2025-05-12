@@ -36,6 +36,19 @@ public class GlobalExceptionHandler {
 	//	}
 
 	/**
+	 * 處理自定義-Excel匯入 相關的問題
+	 * 
+	 * @param exception
+	 * @return
+	 */
+	@ResponseBody
+	@ExceptionHandler(value = ImportExcelException.class)
+	public R<Map<String, Object>> importExcelException(ImportExcelException exception) {
+		String message = exception.getMessage();
+		return R.fail(500, message);
+	}
+
+	/**
 	 * 處理自定義-簽到/退紀錄 相關的問題
 	 * 
 	 * @param exception
