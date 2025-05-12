@@ -116,4 +116,6 @@ public class CheckinRecordController {
 		return R.ok();
 
 	}
+	
+	
 }
