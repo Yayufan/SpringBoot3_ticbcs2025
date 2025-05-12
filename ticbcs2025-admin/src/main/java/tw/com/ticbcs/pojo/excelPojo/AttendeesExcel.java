@@ -12,17 +12,17 @@ public class AttendeesExcel {
 	@ExcelProperty("參加者ID")
 	private String attendeesId;
 
-	@ExcelProperty("簽到狀態 (0未簽到 1已簽到 2已簽退)")
-	private Integer lastCheckinStatus;
+	@ExcelProperty("初次簽到時間")
+	private LocalDateTime firstCheckinTime;
 
-	@ExcelProperty("最後簽到/退時間")
-	private LocalDateTime lastCheckinTime;
+	@ExcelProperty("最後簽退時間")
+	private LocalDateTime lastCheckoutTime;
 
 	@ExcelProperty("會員ID")
 	private String memberId;
 
 	// Member 相關欄位
-	
+
 	@ExcelProperty("頭銜")
 	private String title;
 
@@ -77,6 +77,5 @@ public class AttendeesExcel {
 
 	@ExcelProperty("主報名者(master),子報名者(slave)")
 	private String groupRole;
-
 
 }

@@ -22,8 +22,6 @@ public interface AttendeesConvert {
 	AttendeesTagVO entityToAttendeesTagVO(Attendees attendees);
 
 	@Mapping(source = "attendeesId", target = "attendeesId", qualifiedByName = "convertLongToString")
-	@Mapping(source = "lastCheckinStatus", target = "lastCheckinStatus")
-	@Mapping(source = "lastCheckinTime", target = "lastCheckinTime")
 	@Mapping(source = "member.memberId", target = "memberId", qualifiedByName = "convertLongToString")
 	@Mapping(source = "member.idCard", target = "idCard")
 	@Mapping(source = "member.chineseName", target = "chineseName")

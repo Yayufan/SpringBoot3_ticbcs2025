@@ -35,8 +35,10 @@ import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.exception.EmailException;
+import tw.com.ticbcs.manager.CheckinRecordManager;
 import tw.com.ticbcs.manager.MemberManager;
 import tw.com.ticbcs.mapper.AttendeesMapper;
+import tw.com.ticbcs.pojo.BO.CheckinInfoBO;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
@@ -68,6 +70,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	private static final String DAILY_EMAIL_QUOTA_KEY = "email:dailyQuota";
 
 	private final MemberManager memberManager;
+	private final CheckinRecordManager checkinRecordManager;
 	private final AttendeesConvert attendeesConvert;
 	private final AttendeesHistoryService attendeesHistoryService;
 	private final AttendeesTagService attendeesTagService;
@@ -273,6 +276,13 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
 			attendeesVO.setMember(memberMap.get(attendees.getMemberId()));
 			AttendeesExcel attendeesExcel = attendeesConvert.voToExcel(attendeesVO);
+
+			// 獲取與會者的簡易簽到記錄
+			CheckinInfoBO checkinInfoBO = checkinRecordManager
+					.getLastCheckinRecordByAttendeesId(attendees.getAttendeesId());
+			attendeesExcel.setFirstCheckinTime(checkinInfoBO.getCheckinTime());
+			attendeesExcel.setLastCheckoutTime(checkinInfoBO.getCheckoutTime());
+
 			return attendeesExcel;
 
 		}).collect(Collectors.toList());

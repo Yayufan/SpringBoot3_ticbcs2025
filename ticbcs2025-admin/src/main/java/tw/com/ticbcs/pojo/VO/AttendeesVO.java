@@ -1,9 +1,5 @@
 package tw.com.ticbcs.pojo.VO;
 
-import java.time.LocalDateTime;
-
-import com.baomidou.mybatisplus.annotation.TableField;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import tw.com.ticbcs.pojo.entity.Member;
