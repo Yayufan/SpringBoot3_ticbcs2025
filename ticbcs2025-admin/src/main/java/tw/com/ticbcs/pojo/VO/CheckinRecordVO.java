@@ -2,6 +2,8 @@ package tw.com.ticbcs.pojo.VO;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -21,6 +23,7 @@ public class CheckinRecordVO {
 	private Integer actionType;
 
 	@Schema(description = "簽到/退時間")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime actionTime;
 
 	@Schema(description = "備註")

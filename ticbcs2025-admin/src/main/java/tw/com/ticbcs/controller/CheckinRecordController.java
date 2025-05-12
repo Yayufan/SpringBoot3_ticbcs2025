@@ -78,12 +78,9 @@ public class CheckinRecordController {
 
 	@PostMapping
 	@Operation(summary = "新增單一簽到/退紀錄")
-	@Parameters({
-			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
-	@SaCheckRole("super-admin")
-	public R<CheckinRecord> saveCheckinRecord(@RequestBody @Valid AddCheckinRecordDTO addCheckinRecordDTO) {
-		checkinRecordService.addCheckinRecord(addCheckinRecordDTO);
-		return R.ok();
+	public R<CheckinRecordVO> saveCheckinRecord(@RequestBody @Valid AddCheckinRecordDTO addCheckinRecordDTO) {
+		CheckinRecordVO checkinRecord = checkinRecordService.addCheckinRecord(addCheckinRecordDTO);
+		return R.ok(checkinRecord);
 	}
 
 	@PutMapping
