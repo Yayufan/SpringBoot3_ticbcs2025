@@ -1,5 +1,8 @@
 package tw.com.ticbcs.service.impl;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -9,21 +12,30 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.CheckinRecordConvert;
 import tw.com.ticbcs.exception.CheckinRecordException;
 import tw.com.ticbcs.manager.AttendeesManager;
+import tw.com.ticbcs.manager.MemberManager;
+import tw.com.ticbcs.mapper.AttendeesMapper;
 import tw.com.ticbcs.mapper.CheckinRecordMapper;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddCheckinRecordDTO;
 import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutCheckinRecordDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.VO.CheckinRecordVO;
+import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.CheckinRecord;
+import tw.com.ticbcs.pojo.entity.Member;
+import tw.com.ticbcs.pojo.excelPojo.AttendeesExcel;
+import tw.com.ticbcs.pojo.excelPojo.CheckinRecordExcel;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.CheckinRecordService;
 
@@ -42,7 +54,10 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 
 	private final CheckinRecordConvert checkinRecordConvert;
 	private final AttendeesService attendeesService;
+	private final AttendeesMapper attendeesMapper;
+	private final AttendeesConvert attendeesConvert;
 	private final AttendeesManager attendeesManager;
+	private final MemberManager memberManager;
 
 	@Override
 	public CheckinRecordVO getCheckinRecord(Long checkinRecordId) {
@@ -157,6 +172,67 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 		}).collect(Collectors.toList());
 
 		return checkinRecordVOList;
+	}
+
+	@Override
+	public void downloadExcel(HttpServletResponse response) throws UnsupportedEncodingException, IOException {
+
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		response.setCharacterEncoding("utf-8");
+		// 这里URLEncoder.encode可以防止中文乱码 ， 和easyexcel没有关系
+		String fileName = URLEncoder.encode("簽到退紀錄名單", "UTF-8").replaceAll("\\+", "%20");
+		response.setHeader("Content-disposition", "attachment;filename*=" + fileName + ".xlsx");
+
+		// 查詢所有簽到/退資料
+		List<CheckinRecord> checkinRecordList = baseMapper.selectCheckinRecords();
+
+		// 查詢所有會員，用來填充與會者的基本資訊
+		List<Member> memberList = memberManager.getAllMembersEfficiently();
+
+		// 轉成一對一 Map，key為 memberId, value為訂單本身
+		Map<Long, Member> memberMap = memberList.stream()
+				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
+
+		// 獲取所有與會者 和 對應的映射關係
+		List<Attendees> attendeesList = attendeesMapper.selectAttendees();
+		Map<Long, Attendees> attendeesMap = attendeesList.stream()
+				.collect(Collectors.toMap(Attendees::getAttendeesId, Function.identity()));
+
+		// 資料轉換成Excel
+		List<CheckinRecordExcel> excelData = checkinRecordList.stream().map(checkinRecord -> {
+			// 透過attendeesId先拿到attendeesVO
+			AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendeesMap.get(checkinRecord.getAttendeesId()));
+			// 再透過 memberId放入Member
+			attendeesVO.setMember(memberMap.get(attendeesVO.getMemberId()));
+			// 獲取到AttendeesExcel 再轉換成 CheckinRecordExcel
+			AttendeesExcel attendeesExcel = attendeesConvert.voToExcel(attendeesVO);
+			CheckinRecordExcel checkinRecordExcel = checkinRecordConvert
+					.attendeesExcelToCheckinRecordExcel(attendeesExcel);
+
+			//最後再補上缺失的屬性
+			checkinRecordExcel.setActionTime(checkinRecord.getActionTime());
+			String actionTypeStr;
+			switch (checkinRecord.getActionType()) {
+			case 1:
+				actionTypeStr = "簽到";
+				break;
+			case 2:
+				actionTypeStr = "簽退";
+				break;
+			default:
+				throw new IllegalArgumentException("Unexpected value: " + checkinRecord.getActionType());
+			}
+
+			checkinRecordExcel.setActionType(actionTypeStr);
+			checkinRecordExcel.setLocation(checkinRecord.getLocation());
+			checkinRecordExcel.setCheckinRecordId(checkinRecord.getCheckinRecordId().toString());
+			checkinRecordExcel.setRemark(checkinRecord.getRemark());
+			return checkinRecordExcel;
+
+		}).collect(Collectors.toList());
+
+		EasyExcel.write(response.getOutputStream(), CheckinRecordExcel.class).sheet("簽到退紀錄列表").doWrite(excelData);
+
 	};
 
 }

@@ -1,5 +1,6 @@
 package tw.com.ticbcs.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddCheckinRecordDTO;
@@ -117,5 +119,13 @@ public class CheckinRecordController {
 
 	}
 	
-	
+	@Operation(summary = "下載簽到/退紀錄 excel列表")
+	@SaCheckRole("super-admin")
+	@Parameters({
+			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
+	@GetMapping("/download-excel")
+	public void downloadExcel(HttpServletResponse response) throws IOException {
+		checkinRecordService.downloadExcel(response);
+	}
+
 }

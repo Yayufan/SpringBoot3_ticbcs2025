@@ -14,11 +14,8 @@ public class AttendeesVO {
 	@Schema(description = "主鍵ID")
 	private Long attendeesId;
 	
-	@Schema(description = "0為未簽到，1為已簽到，2為已簽退")
-	private Integer lastCheckinStatus;
-
-	@Schema(description = "最後簽到/退時間")
-	private LocalDateTime lastCheckinTime;
+	@Schema(description = "主鍵ID")
+	private Long memberId;
 	
 	@Schema(description = "參與者流水序號")
 	private Integer sequenceNo;

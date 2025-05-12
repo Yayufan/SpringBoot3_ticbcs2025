@@ -57,7 +57,6 @@ import tw.com.ticbcs.utils.R;
 @RequestMapping("/attendees")
 public class AttendeesController {
 	private final AttendeesService attendeesService;
-	private final AttendeesConvert attendeesConvert;
 
 	@GetMapping("{id}")
 	@Operation(summary = "查詢單一與會者")

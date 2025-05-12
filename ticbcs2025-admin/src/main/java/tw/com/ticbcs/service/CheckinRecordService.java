@@ -1,11 +1,14 @@
 package tw.com.ticbcs.service;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddCheckinRecordDTO;
 import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutCheckinRecordDTO;
 import tw.com.ticbcs.pojo.VO.CheckinRecordVO;
@@ -71,5 +74,15 @@ public interface CheckinRecordService extends IService<CheckinRecord> {
 	 * @param checkinRecordIds
 	 */
 	void deleteCheckinRecordList(List<Long> checkinRecordIds);
+
+	
+	/**
+	 * 下載所有簽到/退紀錄列表
+	 * 
+	 * @throws UnsupportedEncodingException
+	 * @throws IOException
+	 * 
+	 */
+	void downloadExcel(HttpServletResponse response) throws UnsupportedEncodingException, IOException;
 
 }

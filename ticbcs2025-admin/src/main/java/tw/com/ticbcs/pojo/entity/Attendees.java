@@ -41,14 +41,6 @@ public class Attendees implements Serializable {
 	@TableField("sequence_no")
 	private Integer sequenceNo;
 
-	@Schema(description = "0為未簽到，1為已簽到，2為已簽退")
-	@TableField("last_checkin_status")
-	private Integer lastCheckinStatus;
-
-	@Schema(description = "最後簽到/退時間")
-	@TableField("last_checkin_time")
-	private LocalDateTime lastCheckinTime;
-
 	@Schema(description = "與會者mail ， 新增時從會員拿到")
 	@TableField("email")
 	private String email;
