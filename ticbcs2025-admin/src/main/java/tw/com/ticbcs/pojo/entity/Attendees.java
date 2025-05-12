@@ -36,7 +36,7 @@ public class Attendees implements Serializable {
 	@Schema(description = "會員ID")
 	@TableField("member_id")
 	private Long memberId;
-	
+
 	@Schema(description = "參與者流水序號")
 	@TableField("sequence_no")
 	private Integer sequenceNo;
