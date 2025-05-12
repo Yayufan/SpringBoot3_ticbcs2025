@@ -13,8 +13,7 @@ public class AddAttendeesHistoryDTO {
 
 	@Schema(description = "參與時的年份")
 	@NotBlank
-	@JsonFormat(pattern = "yyyy")
-	private LocalDate year;
+	private Integer year;
 
 	@Schema(description = "身分證字號 OR 護照號碼, 用於當作比對的第一標準")
 	private String idCard;

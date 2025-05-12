@@ -3,6 +3,7 @@ package tw.com.ticbcs.service.impl;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import tw.com.ticbcs.pojo.entity.Member;
 import tw.com.ticbcs.pojo.entity.Tag;
 import tw.com.ticbcs.pojo.excelPojo.AttendeesExcel;
 import tw.com.ticbcs.service.AsyncService;
+import tw.com.ticbcs.service.AttendeesHistoryService;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.AttendeesTagService;
 import tw.com.ticbcs.service.TagService;
@@ -67,6 +69,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	private final MemberManager memberManager;
 	private final AttendeesConvert attendeesConvert;
+	private final AttendeesHistoryService attendeesHistoryService;
 	private final AttendeesTagService attendeesTagService;
 	private final TagService tagService;
 	private final TagConvert tagConvert;
@@ -85,7 +88,14 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		// 3.attendees 轉換成 VO
 		AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
+
+		// 4.獲取是否為往年與會者
+		Boolean existsAttendeesHistory = attendeesHistoryService.existsAttendeesHistory(LocalDate.now().getYear() - 1,
+				member.getIdCard(), member.getEmail());
+
+		// 5.組裝VO
 		attendeesVO.setMember(member);
+		attendeesVO.setIsLastYearAttendee(existsAttendeesHistory);
 
 		return attendeesVO;
 	}
@@ -567,7 +577,8 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	}
 
 	@Override
-	public void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO) throws WriterException, IOException {
+	public void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO)
+			throws WriterException, IOException {
 
 		//從Redis中查看本日信件餘額
 		RAtomicLong quota = redissonClient.getAtomicLong(DAILY_EMAIL_QUOTA_KEY);

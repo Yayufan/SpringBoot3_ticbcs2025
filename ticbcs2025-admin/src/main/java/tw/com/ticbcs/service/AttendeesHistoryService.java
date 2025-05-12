@@ -1,7 +1,10 @@
 package tw.com.ticbcs.service;
 
-import tw.com.ticbcs.pojo.entity.AttendeesHistory;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import tw.com.ticbcs.pojo.entity.AttendeesHistory;
 
 /**
  * <p>
@@ -12,5 +15,20 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2025-05-12
  */
 public interface AttendeesHistoryService extends IService<AttendeesHistory> {
+
+	/**
+	 * 根據年份 和 (ID card 或者 email)查詢往年與會者
+	 * 
+	 * @param year
+	 * @param idCard
+	 * @param email
+	 * @return
+	 */
+	Boolean existsAttendeesHistory(Integer year, String idCard, String email);
+
+
+	void importAttendeesHistory(MultipartFile file);
+	
+	void clearAllAttendeesHistory();
 
 }
