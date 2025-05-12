@@ -2,6 +2,8 @@ package tw.com.ticbcs.pojo.VO;
 
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import tw.com.ticbcs.pojo.entity.Member;
@@ -17,6 +19,9 @@ public class AttendeesVO {
 
 	@Schema(description = "最後簽到/退時間")
 	private LocalDateTime lastCheckinTime;
+	
+	@Schema(description = "參與者流水序號")
+	private Integer sequenceNo;
 	
 	@Schema(description = "會員資訊")
 	private Member member;
