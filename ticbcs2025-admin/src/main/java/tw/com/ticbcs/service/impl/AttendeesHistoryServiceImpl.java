@@ -14,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,6 +38,24 @@ import tw.com.ticbcs.service.AttendeesHistoryService;
 @RequiredArgsConstructor
 public class AttendeesHistoryServiceImpl extends ServiceImpl<AttendeesHistoryMapper, AttendeesHistory>
 		implements AttendeesHistoryService {
+
+	@Override
+	public AttendeesHistory getAttendeesHistory(Long attendeesHistoryId) {
+		AttendeesHistory attendeesHistory = baseMapper.selectById(attendeesHistoryId);
+		return attendeesHistory;
+	}
+
+	@Override
+	public List<AttendeesHistory> getAttendeesHistoryList() {
+		List<AttendeesHistory> attendeesHistoryList = baseMapper.selectList(null);
+		return attendeesHistoryList;
+	}
+
+	@Override
+	public IPage<AttendeesHistory> getAttendeesHistoryPage(Page<AttendeesHistory> page) {
+		Page<AttendeesHistory> attendeesHistoryPage = baseMapper.selectPage(page, null);
+		return attendeesHistoryPage;
+	}
 
 	@Override
 	public Boolean existsAttendeesHistory(Integer year, String idCard, String email) {

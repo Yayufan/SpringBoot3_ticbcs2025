@@ -1,26 +1,31 @@
 package tw.com.ticbcs.controller;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+import cn.dev33.satoken.annotation.SaCheckRole;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import tw.com.ticbcs.pojo.entity.AttendeesHistory;
 import tw.com.ticbcs.service.AttendeesHistoryService;
 import tw.com.ticbcs.utils.R;
 
@@ -40,6 +45,34 @@ import tw.com.ticbcs.utils.R;
 public class AttendeesHistoryController {
 
 	private final AttendeesHistoryService attendeesHistoryService;
+
+	@GetMapping("{id}")
+	@Operation(summary = "查詢單一過往與會者")
+	public R<AttendeesHistory> getAttendeesHistory(@PathVariable("id") Long attendeesHistoryId) {
+		AttendeesHistory attendeesHistoryVO = attendeesHistoryService.getAttendeesHistory(attendeesHistoryId);
+		return R.ok(attendeesHistoryVO);
+	}
+
+	@GetMapping
+	@Operation(summary = "查詢全部過往與會者")
+	@Parameters({
+			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
+	@SaCheckRole("super-admin")
+	public R<List<AttendeesHistory>> getAttendeesHistoryList() {
+		List<AttendeesHistory> attendeesHistoryList = attendeesHistoryService.getAttendeesHistoryList();
+		return R.ok(attendeesHistoryList);
+	}
+
+	@GetMapping("pagination")
+	@Operation(summary = "查詢全部過往與會者(分頁)")
+	@Parameters({
+			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
+	@SaCheckRole("super-admin")
+	public R<IPage<AttendeesHistory>> getAttendeesHistoryPage(@RequestParam Integer page, @RequestParam Integer size) {
+		Page<AttendeesHistory> pageable = new Page<AttendeesHistory>(page, size);
+		IPage<AttendeesHistory> attendeesHistoryPage = attendeesHistoryService.getAttendeesHistoryPage(pageable);
+		return R.ok(attendeesHistoryPage);
+	}
 
 	/**
 	 * 清除所有往年與會者資料
