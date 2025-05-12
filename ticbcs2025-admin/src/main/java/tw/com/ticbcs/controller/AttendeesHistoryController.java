@@ -1,7 +1,6 @@
 package tw.com.ticbcs.controller;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import org.springframework.validation.annotation.Validated;
@@ -87,9 +86,8 @@ public class AttendeesHistoryController {
 	/**
 	 * 下載Excel匯入模板
 	 * 
+	 * @param response
 	 * @throws IOException
-	 * 
-	 * @throws UnsupportedEncodingException
 	 */
 	@Operation(summary = "下載往年與會者匯入模板 (Excel)")
 	@GetMapping("/excel-template")
