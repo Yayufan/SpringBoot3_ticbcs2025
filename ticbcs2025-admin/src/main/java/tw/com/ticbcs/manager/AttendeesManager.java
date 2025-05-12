@@ -24,6 +24,11 @@ public class AttendeesManager {
 	private final AttendeesConvert attendeesConvert;
 	private final MemberMapper memberMapper;
 
+	public List<Attendees> getAttendeesList(){
+		List<Attendees> attendeesList = attendeesMapper.selectAttendees();
+		return attendeesList;
+	}
+	
 	public List<AttendeesVO> getAttendeesVOByIds(Collection<Long> ids) {
 		// 根據ids 查詢與會者列表
 		List<Attendees> attendeesList = attendeesMapper.selectBatchIds(ids);

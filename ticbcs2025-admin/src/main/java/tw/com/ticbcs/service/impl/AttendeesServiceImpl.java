@@ -210,7 +210,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 					AddTagDTO addTagDTO = new AddTagDTO();
 					addTagDTO.setType(tagType);
 					addTagDTO.setName(tagName);
-					addTagDTO.setDescription("會員分組標籤 (第 " + groupIndex + " 組)");
+					addTagDTO.setDescription("與會者分組標籤 (第 " + groupIndex + " 組)");
 					addTagDTO.setStatus(0);
 					String adjustColor = tagService.adjustColor("#001F54", groupIndex, 5);
 					addTagDTO.setColor(adjustColor);

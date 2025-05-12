@@ -53,9 +53,10 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 		implements CheckinRecordService {
 
 	private final CheckinRecordConvert checkinRecordConvert;
-	private final AttendeesService attendeesService;
-	private final AttendeesMapper attendeesMapper;
 	private final AttendeesConvert attendeesConvert;
+	
+	private final AttendeesService attendeesService;
+	
 	private final AttendeesManager attendeesManager;
 	private final MemberManager memberManager;
 
@@ -194,7 +195,8 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 				.collect(Collectors.toMap(Member::getMemberId, Function.identity()));
 
 		// 獲取所有與會者 和 對應的映射關係
-		List<Attendees> attendeesList = attendeesMapper.selectAttendees();
+		List<Attendees> attendeesList = attendeesManager.getAttendeesList();
+		
 		Map<Long, Attendees> attendeesMap = attendeesList.stream()
 				.collect(Collectors.toMap(Attendees::getAttendeesId, Function.identity()));
 

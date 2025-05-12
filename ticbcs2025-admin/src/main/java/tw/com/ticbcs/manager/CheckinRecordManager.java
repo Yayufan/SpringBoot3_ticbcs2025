@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.mapper.CheckinRecordMapper;
 import tw.com.ticbcs.pojo.BO.CheckinInfoBO;
+import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.CheckinRecord;
 
 @Component
@@ -18,6 +19,7 @@ public class CheckinRecordManager {
 
 	private final CheckinRecordMapper checkinRecordMapper;
 
+	
 	public CheckinInfoBO getLastCheckinRecordByAttendeesId(Long attendeesId) {
 		// 先找到這個與會者所有的checkin紀錄
 		LambdaQueryWrapper<CheckinRecord> checkinRecordWrapper = new LambdaQueryWrapper<>();
