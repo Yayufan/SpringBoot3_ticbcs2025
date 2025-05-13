@@ -280,6 +280,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 	}
 
 	@Override
+	@Transactional
 	public void addMemberForAdmin(AddMemberForAdminDTO addMemberForAdminDTO) {
 		// 資料轉換
 		Member member = memberConvert.forAdminAddDTOToEntity(addMemberForAdminDTO);
@@ -302,7 +303,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		addOrdersDTO.setItemsSummary(ITEMS_SUMMARY_REGISTRATION);
 		// 設定繳費狀態為 已繳費
 		addOrdersDTO.setStatus(2);
-		// 後台新增的會員(MVP)，不用繳費
+		// 後台新增的會員(MVP、Speaker、Moderator、Staff)，不用繳費
 		addOrdersDTO.setTotalAmount(BigDecimal.ZERO);
 		// 透過訂單服務 新增訂單
 		Long ordersId = ordersService.addOrders(addOrdersDTO);
