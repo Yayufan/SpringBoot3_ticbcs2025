@@ -98,11 +98,11 @@ public class AttendeesHistoryController {
 	}
 
 	/**
-	 * 匯入往年與會者名單 (Excel或CSV檔)
+	 * 匯入往年與會者名單 (Excel檔)
 	 * 
 	 * @throws IOException
 	 */
-	@Operation(summary = "匯入往年與會者名單 (Excel/CSV)")
+	@Operation(summary = "匯入往年與會者名單 (Excel)")
 	@PostMapping("/import")
 	public R<Void> importAttendeesHistory(@RequestParam("file") MultipartFile file) throws IOException {
 		attendeesHistoryService.importAttendeesHistory(file);

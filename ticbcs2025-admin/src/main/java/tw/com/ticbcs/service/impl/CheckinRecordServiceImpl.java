@@ -22,10 +22,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.CheckinRecordConvert;
+import tw.com.ticbcs.enums.CheckinActionTypeEnum;
 import tw.com.ticbcs.exception.CheckinRecordException;
 import tw.com.ticbcs.manager.AttendeesManager;
 import tw.com.ticbcs.manager.MemberManager;
-import tw.com.ticbcs.mapper.AttendeesMapper;
 import tw.com.ticbcs.mapper.CheckinRecordMapper;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddCheckinRecordDTO;
 import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutCheckinRecordDTO;
@@ -36,7 +36,6 @@ import tw.com.ticbcs.pojo.entity.CheckinRecord;
 import tw.com.ticbcs.pojo.entity.Member;
 import tw.com.ticbcs.pojo.excelPojo.AttendeesExcel;
 import tw.com.ticbcs.pojo.excelPojo.CheckinRecordExcel;
-import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.CheckinRecordService;
 
 /**
@@ -114,19 +113,25 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 				.orderByDesc(CheckinRecord::getCheckinRecordId)
 				.last("LIMIT 1"));
 
-		// 2.最新數據不為null，判斷是否操作行為一致，如果一致，拋出異常，告知不可連續簽到 或 簽退
+		// 2.如果完全沒資料，代表他沒簽到過， 再判斷此次動作是否為簽退，如果是則拋出異常
+		if (latestRecord == null
+				&& CheckinActionTypeEnum.CHECKOUT.getValue().equals(addCheckinRecordDTO.getActionType())) {
+			throw new CheckinRecordException("沒有簽到記錄，不可簽退");
+		}
+
+		// 3.最新數據不為null，判斷是否操作行為一致，如果一致，拋出異常，告知不可連續簽到 或 簽退
 		if (latestRecord != null && latestRecord.getActionType().equals(addCheckinRecordDTO.getActionType())) {
 			throw new CheckinRecordException("不可連續簽到 或 連續簽退");
 		}
 
-		// 3.轉換成entity對象
+		// 4.轉換成entity對象
 		CheckinRecord checkinRecord = checkinRecordConvert.addDTOToEntity(addCheckinRecordDTO);
 		checkinRecord.setActionTime(LocalDateTime.now());
 
-		// 4.新增進資料庫
+		// 5.新增進資料庫
 		baseMapper.insert(checkinRecord);
 
-		// 5.準備返回的數據
+		// 6.準備返回的數據
 		return this.getCheckinRecord(checkinRecord.getCheckinRecordId());
 
 	}
@@ -211,19 +216,7 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 
 			//最後再補上缺失的屬性
 			checkinRecordExcel.setActionTime(checkinRecord.getActionTime());
-			String actionTypeStr;
-			switch (checkinRecord.getActionType()) {
-			case 1:
-				actionTypeStr = "簽到";
-				break;
-			case 2:
-				actionTypeStr = "簽退";
-				break;
-			default:
-				throw new IllegalArgumentException("Unexpected value: " + checkinRecord.getActionType());
-			}
-
-			checkinRecordExcel.setActionType(actionTypeStr);
+			checkinRecordExcel.setActionType(CheckinActionTypeEnum.fromValue(checkinRecord.getActionType()).getLabel());
 			checkinRecordExcel.setLocation(checkinRecord.getLocation());
 			checkinRecordExcel.setCheckinRecordId(checkinRecord.getCheckinRecordId().toString());
 			checkinRecordExcel.setRemark(checkinRecord.getRemark());
