@@ -19,6 +19,6 @@ import tw.com.ticbcs.pojo.entity.CheckinRecord;
 public interface CheckinRecordMapper extends BaseMapper<CheckinRecord> {
 
 	// 因為是For Excel 匯出使用，所以按照與會者排序
-	@Select("SELECT * FROM checkin_record WHERE is_deleted = 0 ORDER BY attendees_id")
+	@Select("SELECT * FROM checkin_record WHERE is_deleted = 0 ORDER BY attendees_id,action_time")
 	List<CheckinRecord> selectCheckinRecords();
 }

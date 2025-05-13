@@ -3,7 +3,6 @@ package tw.com.ticbcs.service.impl;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -74,7 +73,6 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	private final CheckinRecordManager checkinRecordManager;
 	private final AttendeesManager attendeesManager;
 	private final AttendeesConvert attendeesConvert;
-	private final AttendeesHistoryService attendeesHistoryService;
 	private final AttendeesTagService attendeesTagService;
 	private final TagService tagService;
 	private final TagConvert tagConvert;
