@@ -54,9 +54,7 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 
 	private final CheckinRecordConvert checkinRecordConvert;
 	private final AttendeesConvert attendeesConvert;
-	
-	private final AttendeesService attendeesService;
-	
+
 	private final AttendeesManager attendeesManager;
 	private final MemberManager memberManager;
 
@@ -67,7 +65,7 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 		CheckinRecord checkinRecord = baseMapper.selectById(checkinRecordId);
 
 		// 2.查詢此簽到者的基本資訊
-		AttendeesVO attendeesVO = attendeesService.getAttendees(checkinRecord.getAttendeesId());
+		AttendeesVO attendeesVO = attendeesManager.getAttendeesVOByAttendeesId(checkinRecord.getAttendeesId());
 
 		// 3.實體類轉換成VO
 		CheckinRecordVO checkinRecordVO = checkinRecordConvert.entityToVO(checkinRecord);
@@ -196,7 +194,7 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 
 		// 獲取所有與會者 和 對應的映射關係
 		List<Attendees> attendeesList = attendeesManager.getAttendeesList();
-		
+
 		Map<Long, Attendees> attendeesMap = attendeesList.stream()
 				.collect(Collectors.toMap(Attendees::getAttendeesId, Function.identity()));
 

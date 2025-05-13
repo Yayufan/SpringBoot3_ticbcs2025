@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.exception.EmailException;
+import tw.com.ticbcs.manager.AttendeesManager;
 import tw.com.ticbcs.manager.CheckinRecordManager;
 import tw.com.ticbcs.manager.MemberManager;
 import tw.com.ticbcs.mapper.AttendeesMapper;
@@ -71,6 +72,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	private final MemberManager memberManager;
 	private final CheckinRecordManager checkinRecordManager;
+	private final AttendeesManager attendeesManager;
 	private final AttendeesConvert attendeesConvert;
 	private final AttendeesHistoryService attendeesHistoryService;
 	private final AttendeesTagService attendeesTagService;
@@ -83,23 +85,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Override
 	public AttendeesVO getAttendees(Long id) {
-		// 1.先查詢到與會者自己的紀錄
-		Attendees attendees = baseMapper.selectById(id);
-
-		// 2.從attendees的 attendeesId中找到與會者的基本資料
-		Member member = memberManager.getMemberById(attendees.getMemberId());
-
-		// 3.attendees 轉換成 VO
-		AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
-
-		// 4.獲取是否為往年與會者
-		Boolean existsAttendeesHistory = attendeesHistoryService.existsAttendeesHistory(LocalDate.now().getYear() - 1,
-				member.getIdCard(), member.getEmail());
-
-		// 5.組裝VO
-		attendeesVO.setMember(member);
-		attendeesVO.setIsLastYearAttendee(existsAttendeesHistory);
-
+		AttendeesVO attendeesVO = attendeesManager.getAttendeesVOByAttendeesId(id);
 		return attendeesVO;
 	}
 

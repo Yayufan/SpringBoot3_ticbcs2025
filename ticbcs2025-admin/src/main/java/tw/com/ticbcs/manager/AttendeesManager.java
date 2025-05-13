@@ -1,5 +1,6 @@
 package tw.com.ticbcs.manager;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -8,12 +9,16 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
+import tw.com.ticbcs.mapper.AttendeesHistoryMapper;
 import tw.com.ticbcs.mapper.AttendeesMapper;
 import tw.com.ticbcs.mapper.MemberMapper;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
+import tw.com.ticbcs.pojo.entity.AttendeesHistory;
 import tw.com.ticbcs.pojo.entity.Member;
 
 @Component
@@ -23,12 +28,34 @@ public class AttendeesManager {
 	private final AttendeesMapper attendeesMapper;
 	private final AttendeesConvert attendeesConvert;
 	private final MemberMapper memberMapper;
+	private final AttendeesHistoryMapper attendeesHistoryMapper;
 
-	public List<Attendees> getAttendeesList(){
+	public List<Attendees> getAttendeesList() {
 		List<Attendees> attendeesList = attendeesMapper.selectAttendees();
 		return attendeesList;
 	}
-	
+
+	public AttendeesVO getAttendeesVOByAttendeesId(Long attendeesId) {
+		// 1.先查詢到與會者自己的紀錄
+		Attendees attendees = attendeesMapper.selectById(attendeesId);
+
+		// 2.從attendees的 attendeesId中找到與會者的基本資料
+		Member member = memberMapper.selectById(attendees.getMemberId());
+
+		// 3.attendees 轉換成 VO
+		AttendeesVO attendeesVO = attendeesConvert.entityToVO(attendees);
+
+		// 4.獲取是否為往年與會者
+		Boolean existsAttendeesHistory = this.existsAttendeesHistory(LocalDate.now().getYear() - 1, member.getIdCard(),
+				member.getEmail());
+
+		// 5.組裝VO
+		attendeesVO.setMember(member);
+		attendeesVO.setIsLastYearAttendee(existsAttendeesHistory);
+
+		return attendeesVO;
+	};
+
 	public List<AttendeesVO> getAttendeesVOByIds(Collection<Long> ids) {
 		// 根據ids 查詢與會者列表
 		List<Attendees> attendeesList = attendeesMapper.selectBatchIds(ids);
@@ -50,5 +77,25 @@ public class AttendeesManager {
 
 		return attendeesVOList;
 	};
+
+	private Boolean existsAttendeesHistory(Integer year, String idCard, String email) {
+		LambdaQueryWrapper<AttendeesHistory> wrapper = new LambdaQueryWrapper<>();
+		wrapper.eq(AttendeesHistory::getYear, year);
+
+		if (idCard != null && !idCard.isBlank()) {
+			wrapper.eq(AttendeesHistory::getIdCard, idCard);
+		} else {
+			wrapper.eq(AttendeesHistory::getEmail, email);
+		}
+
+		// 有可能為null 有可能查詢有值
+		AttendeesHistory result = attendeesHistoryMapper.selectOne(wrapper);
+
+		System.out.println("result 的值為" + result);
+
+		// 回傳 true：資料庫有符合條件的紀錄 (result 不為 null)
+		// 回傳 false：資料庫無符合條件的紀錄 (result 為 null)
+		return result != null;
+	}
 
 }

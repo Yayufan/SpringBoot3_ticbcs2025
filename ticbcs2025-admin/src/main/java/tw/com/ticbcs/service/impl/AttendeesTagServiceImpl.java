@@ -46,7 +46,7 @@ public class AttendeesTagServiceImpl extends ServiceImpl<AttendeesTagMapper, Att
 	@Override
 	public List<AttendeesTag> getAttendeesTagByAttendeesIds(Collection<Long> attendeesIds) {
 		LambdaQueryWrapper<AttendeesTag> currentQueryWrapper = new LambdaQueryWrapper<>();
-		currentQueryWrapper.in(AttendeesTag::getAttendeesTagId, attendeesIds);
+		currentQueryWrapper.in(AttendeesTag::getAttendeesId, attendeesIds);
 		List<AttendeesTag> attendeesTagList = baseMapper.selectList(currentQueryWrapper);
 
 		return attendeesTagList;
