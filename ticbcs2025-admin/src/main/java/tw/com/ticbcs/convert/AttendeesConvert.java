@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import tw.com.ticbcs.enums.MemberCategoryEnum;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
@@ -45,24 +46,7 @@ public interface AttendeesConvert {
 
 	@Named("convertCategory")
 	default String convertCategory(Integer category) {
-		switch (category) {
-		case 1:
-			return "會員";
-		case 2:
-			return "其他";
-		case 3:
-			return "非會員";
-		case 4:
-			return "MVP";
-		case 5:
-			return "Speaker";
-		case 6:
-			return "Moderator";
-		case 7:
-			return "工作人員";
-		default:
-			return "";
-		}
+		return MemberCategoryEnum.fromValue(category).getLabelZh();
 	}
 
 	@Named("convertLongToString")

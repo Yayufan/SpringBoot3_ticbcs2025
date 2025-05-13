@@ -3,6 +3,10 @@ package tw.com.ticbcs.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 對標 checkinRecord table , action_type 屬性
+ * 
+ */
 @Getter
 @AllArgsConstructor
 public enum CheckinActionTypeEnum {
