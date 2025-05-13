@@ -54,6 +54,12 @@ public interface AttendeesConvert {
 			return "非會員";
 		case 4:
 			return "MVP";
+		case 5:
+			return "Speaker";
+		case 6:
+			return "Moderator";
+		case 7:
+			return "工作人員";
 		default:
 			return "";
 		}
