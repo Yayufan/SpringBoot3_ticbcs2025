@@ -84,14 +84,14 @@ public interface TagService extends IService<Tag> {
 	 * @param insertTagDTO
 	 * @return
 	 */
-	Long insertTag(AddTagDTO insertTagDTO);
+	Long insertTag(AddTagDTO addTagDTO);
 
 	/**
 	 * 更新標籤
 	 * 
 	 * @param updateTagDTO
 	 */
-	void updateTag(PutTagDTO updateTagDTO);
+	void updateTag(PutTagDTO putTagDTO);
 
 	/**
 	 * 根據tagId刪除標籤
