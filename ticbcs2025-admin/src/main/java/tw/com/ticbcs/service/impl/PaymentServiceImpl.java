@@ -38,7 +38,6 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, Payment> impl
 	private final AttendeesService attendeesService;
 	private final MemberMapper memberMapper;
 	private final OrdersMapper ordersMapper;
-	private final AttendeesMapper attendeesMapper;
 
 	@Override
 	public Payment getPayment(Long paymentId) {
