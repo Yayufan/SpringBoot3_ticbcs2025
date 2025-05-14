@@ -18,11 +18,13 @@ import tw.com.ticbcs.mapper.MemberMapper;
 import tw.com.ticbcs.mapper.OrdersMapper;
 import tw.com.ticbcs.mapper.PaymentMapper;
 import tw.com.ticbcs.pojo.DTO.ECPayDTO.ECPayResponseDTO;
+import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutPaymentDTO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.Member;
 import tw.com.ticbcs.pojo.entity.Orders;
 import tw.com.ticbcs.pojo.entity.Payment;
+import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.OrdersService;
 import tw.com.ticbcs.service.PaymentService;
 
@@ -33,6 +35,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, Payment> impl
 
 	private final PaymentConvert paymentConvert;
 	private final OrdersService ordersService;
+	private final AttendeesService attendeesService;
 	private final MemberMapper memberMapper;
 	private final OrdersMapper ordersMapper;
 	private final AttendeesMapper attendeesMapper;
@@ -82,10 +85,11 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, Payment> impl
 				// 並將這個人更新進attendees表中，代表他已具備入場資格
 				Member member = memberMapper.selectById(currentOrders.getMemberId());
 
-				Attendees attendees = new Attendees();
-				attendees.setMemberId(member.getMemberId());
-				attendees.setEmail(member.getEmail());
-				attendeesMapper.insert(attendees);
+				//付款完成，所以將他新增進 與會者名單
+				AddAttendeesDTO addAttendeesDTO = new AddAttendeesDTO();
+				addAttendeesDTO.setEmail(member.getEmail());
+				addAttendeesDTO.setMemberId(member.getMemberId());
+				attendeesService.addAfterPayment(addAttendeesDTO);
 
 			}
 
@@ -101,7 +105,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, Payment> impl
 			}
 		}
 
-		// 3.查詢這個訂單的會員
+		// 3.查詢這個訂單的會員，並
 		Member member = memberMapper.selectById(currentOrders.getMemberId());
 
 		// 4.判斷這個member有沒有group，是否處於團體報名，且付款的更新者為master，從如果有才進行此方法塊
@@ -125,15 +129,15 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentMapper, Payment> impl
 				if (slaveMemberGroupOrder.getStatus() != 2) {
 					slaveMemberGroupOrder.setStatus(currentOrders.getStatus());
 				}
-				
+
 				//如果已經為 2 付款成功，就不要去動它了
 				ordersService.updateById(slaveMemberGroupOrder);
 
-				//並將報名者添加到attendees 表裡面，代表他已具備入場資格
-				Attendees attendees = new Attendees();
-				attendees.setMemberId(slaveMember.getMemberId());
-				attendees.setEmail(slaveMember.getEmail());
-				attendeesMapper.insert(attendees);
+				//付款完成。並將報名者添加到attendees 表裡面，代表他已具備入場資格
+				AddAttendeesDTO addAttendeesDTO = new AddAttendeesDTO();
+				addAttendeesDTO.setEmail(member.getEmail());
+				addAttendeesDTO.setMemberId(member.getMemberId());
+				attendeesService.addAfterPayment(addAttendeesDTO);
 
 			}
 
