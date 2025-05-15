@@ -436,7 +436,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		if (memberIds.isEmpty()) {
 			// 直接return 空voPage對象
 			voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), 0);
-			voPage.setRecords(null);
+			voPage.setRecords(Collections.emptyList());
 			return voPage;
 		}
 
