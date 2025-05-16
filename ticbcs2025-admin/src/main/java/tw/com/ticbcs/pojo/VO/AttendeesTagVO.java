@@ -14,15 +14,15 @@ public class AttendeesTagVO {
 
 	@Schema(description = "主鍵ID")
 	private Long attendeesId;
+	
+	@Schema(description = "現在是否已簽到；預設為false,未簽到或處於簽退狀態")
+	private Boolean isCheckedIn = false;
 
 	@Schema(description = "會員資訊")
 	private Member member;
 
 	@Schema(description = "持有的標籤")
 	private Set<Tag> tagSet;
-
-	@Schema(description = "現在是否已簽到；預設為false,未簽到或處於簽退狀態")
-	private Boolean isCheckedIn = false;
 
 	@Schema(description = "簽到記錄")
 	private List<CheckinRecord> checkinRecordList;
