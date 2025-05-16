@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +34,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.TagConvert;
+import tw.com.ticbcs.enums.CheckinActionTypeEnum;
 import tw.com.ticbcs.exception.EmailException;
 import tw.com.ticbcs.manager.AttendeesManager;
 import tw.com.ticbcs.manager.CheckinRecordManager;
@@ -46,11 +48,11 @@ import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.AttendeesTag;
+import tw.com.ticbcs.pojo.entity.CheckinRecord;
 import tw.com.ticbcs.pojo.entity.Member;
 import tw.com.ticbcs.pojo.entity.Tag;
 import tw.com.ticbcs.pojo.excelPojo.AttendeesExcel;
 import tw.com.ticbcs.service.AsyncService;
-import tw.com.ticbcs.service.AttendeesHistoryService;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.AttendeesTagService;
 import tw.com.ticbcs.service.TagService;
@@ -286,7 +288,21 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		Member member = memberManager.getMemberById(attendees.getMemberId());
 		attendeesTagVO.setMember(member);
 
-		// 3.查詢該attendees所有關聯的tag
+		// 3.根據 attendeesId 找到與會者所有簽到/退紀錄，並放入CheckinRecord屬性
+		List<CheckinRecord> checkinRecordList = checkinRecordManager.getCheckinRecordByAttendeesId(attendeesId);
+		attendeesTagVO.setCheckinRecordList(checkinRecordList);
+
+		// 4.isCheckedIn屬性預設是false, 所以只要判斷最新的資料是不是已簽到,如果是再進行更改就好
+		CheckinRecord latest = checkinRecordList.stream()
+				// ID 為雪花算法，等於時間序
+				.max(Comparator.comparing(CheckinRecord::getCheckinRecordId)) 
+				.orElse(null);
+
+		if (latest != null && CheckinActionTypeEnum.CHECKIN.getValue().equals(latest.getActionType())) {
+			attendeesTagVO.setIsCheckedIn(true);
+		}
+
+		// 5.查詢該attendees所有關聯的tag
 		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesId(attendeesId);
 
 		// 如果沒有任何關聯,就可以直接返回了
@@ -294,16 +310,16 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			return attendeesTagVO;
 		}
 
-		// 4.獲取到所有attendeesTag的關聯關係後，提取出tagIds
+		// 6.獲取到所有attendeesTag的關聯關係後，提取出tagIds
 		List<Long> tagIds = attendeesTagList.stream()
 				.map(attendeesTag -> attendeesTag.getTagId())
 				.collect(Collectors.toList());
 
-		// 5.去Tag表中查詢實際的Tag資料，並轉換成Set集合
+		// 7.去Tag表中查詢實際的Tag資料，並轉換成Set集合
 		List<Tag> tagList = tagService.getTagByTagIds(tagIds);
 		Set<Tag> tagSet = new HashSet<>(tagList);
 
-		// 6.最後填入attendeesTagVO對象並返回
+		// 8.最後填入attendeesTagVO對象並返回
 		attendeesTagVO.setTagSet(tagSet);
 		return attendeesTagVO;
 
@@ -450,7 +466,14 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				.map(Attendees::getAttendeesId)
 				.collect(Collectors.toList());
 
-		// 這邊attendeesIds不可能沒有元素, 因為attendeesId 和 memberId是 1:1關係
+		// 如果attendeesIds為空，直接返回一個空Page<AttendeesTagVO>對象
+		if (attendeesIds.isEmpty()) {
+			// 直接return 空voPage對象
+			voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), 0);
+			voPage.setRecords(Collections.emptyList());
+			return voPage;
+		}
+
 		// 5. 批量查詢 AttendeesTag 關係表，獲取 attendeesId 对应的 tagId
 		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesIds(attendeesIds);
 
