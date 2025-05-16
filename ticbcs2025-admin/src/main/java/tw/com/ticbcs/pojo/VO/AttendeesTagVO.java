@@ -1,6 +1,5 @@
 package tw.com.ticbcs.pojo.VO;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -21,10 +20,10 @@ public class AttendeesTagVO {
 
 	@Schema(description = "持有的標籤")
 	private Set<Tag> tagSet;
-	
+
 	@Schema(description = "現在是否已簽到；預設為false,未簽到或處於簽退狀態")
 	private Boolean isCheckedIn = false;
-	
+
 	@Schema(description = "簽到記錄")
 	private List<CheckinRecord> checkinRecordList;
 

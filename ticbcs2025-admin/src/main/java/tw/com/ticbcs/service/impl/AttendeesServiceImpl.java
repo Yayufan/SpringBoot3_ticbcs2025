@@ -295,7 +295,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		// 4.isCheckedIn屬性預設是false, 所以只要判斷最新的資料是不是已簽到,如果是再進行更改就好
 		CheckinRecord latest = checkinRecordList.stream()
 				// ID 為雪花算法，等於時間序
-				.max(Comparator.comparing(CheckinRecord::getCheckinRecordId)) 
+				.max(Comparator.comparing(CheckinRecord::getCheckinRecordId))
 				.orElse(null);
 
 		if (latest != null && CheckinActionTypeEnum.CHECKIN.getValue().equals(latest.getActionType())) {
@@ -356,14 +356,34 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			return voPage;
 		}
 
-		// 4. 批量查詢 AttendeesTag 關係表，獲取 attendeesId 对应的 tagId
+		// 6獲取所有與會者簽到/退紀錄、與會者與簽到記錄的映射、與會者與簽到狀態的映射
+		List<CheckinRecord> checkinRecordList = checkinRecordManager.getCheckinRecordsByAttendeesIds(attendeesIds);
+		Map<Long, List<CheckinRecord>> checkinRecordMap = checkinRecordList.stream()
+				.collect(Collectors.groupingBy(CheckinRecord::getAttendeesId));
+
+		// 預定義用來儲存與會者的簽到狀態
+		Map<Long, Boolean> checkinStatusMap = new HashMap<>();
+
+		//透過Map.entrySet, 獲取key,value 的每次遍歷值
+		for (Map.Entry<Long, List<CheckinRecord>> entry : checkinRecordMap.entrySet()) {
+			CheckinRecord latest = entry.getValue()
+					.stream()
+					.max(Comparator.comparing(CheckinRecord::getCheckinRecordId))
+					.orElse(null);
+
+			boolean isCheckedIn = latest != null
+					&& CheckinActionTypeEnum.CHECKIN.getValue().equals(latest.getActionType());
+			checkinStatusMap.put(entry.getKey(), isCheckedIn);
+		}
+
+		// 7. 批量查詢 AttendeesTag 關係表，獲取 attendeesId 对应的 tagId
 		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesIds(attendeesIds);
 
-		//5.先定義attendeesTagMap 和 tagIds 
+		// 8.先定義attendeesTagMap 和 tagIds 
 		Map<Long, List<Long>> attendeesTagMap = new HashMap<>();
 		Set<Long> tagIds = new HashSet<>();
 
-		// 6.在一次遍歷中蒐集兩者
+		// 9.在一次遍歷中蒐集兩者
 		for (AttendeesTag at : attendeesTagList) {
 			// 1. 分組：attendeesId → List<tagId>
 			/**
@@ -393,7 +413,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			tagIds.add(at.getTagId());
 		}
 
-		// 7. 批量查 Tag / Member (避免 N+1)
+		// 10. 批量查 Tag / Member (避免 N+1)
 		// Tag Map
 		Map<Long, Tag> tagMap = tagIds.isEmpty() ? Collections.emptyMap()
 				: tagService.getTagByTagIds(new ArrayList<>(tagIds))
@@ -406,7 +426,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 						.stream()
 						.collect(Collectors.toMap(Member::getMemberId, member -> member));
 
-		// 9. 組裝 VO
+		// 11. 組裝 VO
 		List<AttendeesTagVO> voList = attendeesPage.getRecords().stream().map(attendees -> {
 			AttendeesTagVO vo = attendeesConvert.entityToAttendeesTagVO(attendees);
 
@@ -423,10 +443,15 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 			vo.setTagSet(tagSet);
 
+			// 填充簽到/退紀錄
+			vo.setCheckinRecordList(checkinRecordMap.getOrDefault(attendees.getAttendeesId(), Collections.emptyList()));
+			// 填充簽到狀態
+			vo.setIsCheckedIn(checkinStatusMap.getOrDefault(attendees.getAttendeesId(), false));
+
 			return vo;
 		}).collect(Collectors.toList());
 
-		// 10. 塞回 VO 分頁
+		// 12. 塞回 VO 分頁
 		voPage.setRecords(voList);
 		return voPage;
 
@@ -434,8 +459,6 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Override
 	public IPage<AttendeesTagVO> getAttendeesTagVOPageByQuery(Page<Attendees> pageInfo, String queryText) {
-
-		IPage<AttendeesTagVO> voPage;
 
 		// 1.因為能進與會者其實沒有單獨的資訊了，所以是查詢會員資訊，queryText都是member的資訊
 		List<Member> memberList = memberManager.getMembersByQuery(queryText);
@@ -448,7 +471,10 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			memberIds.add(member.getMemberId());
 		}
 
-		// 3.如果memberIds為空，直接返回一個空Page<AttendeesTagVO>對象
+		// 3.先創建要返回的VOPage對象, 最後在塞record即可
+		IPage<AttendeesTagVO> voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), 0);
+
+		// 4.如果memberIds為空，直接返回一個空Page<AttendeesTagVO>對象
 		if (memberIds.isEmpty()) {
 			// 直接return 空voPage對象
 			voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), 0);
@@ -456,7 +482,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			return voPage;
 		}
 
-		// 4.如果不為空，則查詢出符合的attendees (分頁)
+		// 5.如果不為空，則查詢出符合的attendees (分頁)，並抽取attendeesIds
 		LambdaQueryWrapper<Attendees> attendeesWrapper = new LambdaQueryWrapper<>();
 		attendeesWrapper.in(Attendees::getMemberId, memberIds);
 		Page<Attendees> attendeesPage = baseMapper.selectPage(pageInfo, attendeesWrapper);
@@ -466,7 +492,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				.map(Attendees::getAttendeesId)
 				.collect(Collectors.toList());
 
-		// 如果attendeesIds為空，直接返回一個空Page<AttendeesTagVO>對象
+		// 6.如果attendeesIds為空，直接返回一個空Page<AttendeesTagVO>對象
 		if (attendeesIds.isEmpty()) {
 			// 直接return 空voPage對象
 			voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), 0);
@@ -474,75 +500,97 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			return voPage;
 		}
 
-		// 5. 批量查詢 AttendeesTag 關係表，獲取 attendeesId 对应的 tagId
-		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesIds(attendeesIds);
+		// 7.獲取所有與會者簽到/退紀錄、與會者與簽到記錄的映射、與會者與簽到狀態的映射
+		List<CheckinRecord> checkinRecordList = checkinRecordManager.getCheckinRecordsByAttendeesIds(attendeesIds);
+		Map<Long, List<CheckinRecord>> checkinRecordMap = checkinRecordList.stream()
+				.collect(Collectors.groupingBy(CheckinRecord::getAttendeesId));
 
-		// 6. 將 attendeesId 對應的 tagId 歸類，key 為attendeesId , value 為 tagIdList
-		Map<Long, List<Long>> attendeesTagMap = attendeesTagList.stream()
-				.collect(Collectors.groupingBy(AttendeesTag::getAttendeesId,
-						Collectors.mapping(AttendeesTag::getTagId, Collectors.toList())));
+		// 預定義用來儲存與會者的簽到狀態
+		Map<Long, Boolean> checkinStatusMap = new HashMap<>();
 
-		// 7. 獲取所有 tagId 列表
-		List<Long> tagIds = attendeesTagList.stream()
-				.map(AttendeesTag::getTagId)
-				.distinct()
-				.collect(Collectors.toList());
+		// 透過Map.entrySet, 獲取key,value 的每次遍歷值
+		for (Map.Entry<Long, List<CheckinRecord>> entry : checkinRecordMap.entrySet()) {
+			CheckinRecord latest = entry.getValue()
+					.stream()
+					.max(Comparator.comparing(CheckinRecord::getCheckinRecordId))
+					.orElse(null);
 
-		// 8. 批量查询所有的 Tag，如果關聯的tagIds為空, 那就不用查了，直接返回
-		if (tagIds.isEmpty()) {
-			System.out.println("沒有任何tag關聯,所以直接返回");
-			List<AttendeesTagVO> attendeesTagVOList = attendeesPage.getRecords().stream().map(attendees -> {
-
-				// 轉換成VO對象後，透過map映射找到Member
-				AttendeesTagVO vo = attendeesConvert.entityToAttendeesTagVO(attendees);
-				Member member = memberMap.get(attendees.getMemberId());
-				// 組裝vo後返回
-				vo.setMember(member);
-				vo.setTagSet(new HashSet<>());
-				return vo;
-			}).collect(Collectors.toList());
-			voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), attendeesPage.getTotal());
-			voPage.setRecords(attendeesTagVOList);
-			return voPage;
-
+			boolean isCheckedIn = latest != null
+					&& CheckinActionTypeEnum.CHECKIN.getValue().equals(latest.getActionType());
+			checkinStatusMap.put(entry.getKey(), isCheckedIn);
 		}
 
-		// 定義tagList
-		List<Tag> tagList;
-		tagList = tagService.getTagByTagIds(tagIds);
+		// 8. 批量查詢 AttendeesTag 關係表，獲取 attendeesId 对应的 tagId
+		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByAttendeesIds(attendeesIds);
 
-		// 9. 將 Tag 按 tagId 歸類
-		Map<Long, Tag> tagMap = tagList.stream().collect(Collectors.toMap(Tag::getTagId, tag -> tag));
+		// 9.先定義attendeesTagMap 和 tagIds 
+		Map<Long, List<Long>> attendeesTagMap = new HashMap<>();
+		Set<Long> tagIds = new HashSet<>();
 
-		// 10. 組裝 VO 數據
+		// 10.在一次遍歷中蒐集兩者
+		for (AttendeesTag at : attendeesTagList) {
+			// 1. 分組：attendeesId → List<tagId>
+			/**
+			 * 
+			 * 如果 attendeesTagMap 中已經存在 at.getAttendeesId() 這個鍵：
+			 * 
+			 * 直接返回與該鍵關聯的現有 List<Long> (不會創建新的 ArrayList)
+			 * Lambda 表達式 k -> new ArrayList<>() 不會被執行
+			 * 
+			 * 
+			 * 如果 attendeesTagMap 中不存在這個鍵：
+			 * 
+			 * 執行 Lambda 表達式創建新的 ArrayList<>()
+			 * 將這個新列表與鍵 at.getAttendeesId() 關聯並存入 attendeesTagMap
+			 * 返回這個新列表
+			 * 
+			 * 
+			 * 無論是哪種情況，computeIfAbsent 都會返回一個與該鍵關聯的 List<Long>，然後調用 .add(at.getTagId())
+			 * 將標籤ID添加到這個列表中。
+			 * 
+			 * computeIfAbsent 和後續的 .add() 操作實際上是兩個分開的步驟
+			 * 
+			 */
+			attendeesTagMap.computeIfAbsent(at.getAttendeesId(), k -> new ArrayList<>()).add(at.getTagId());
+
+			// 2. 收集所有 tagId
+			tagIds.add(at.getTagId());
+		}
+
+		// 11. 批量查 Tag / Member (避免 N+1)
+		// Tag Map
+		Map<Long, Tag> tagMap = tagIds.isEmpty() ? Collections.emptyMap()
+				: tagService.getTagByTagIds(new ArrayList<>(tagIds))
+						.stream()
+						.collect(Collectors.toMap(Tag::getTagId, tag -> tag));
+
+		// 12. 組裝 VO
 		List<AttendeesTagVO> voList = attendeesPage.getRecords().stream().map(attendees -> {
-
-			// 將查找到的Attendees,轉換成VO對象
 			AttendeesTagVO vo = attendeesConvert.entityToAttendeesTagVO(attendees);
-			// 透過 mapping 找到member, 並組裝進VO
-			Member member = memberMap.get(attendees.getMemberId());
-			vo.setMember(member);
 
-			// 獲取該 attendeesId 關聯的 tagId 列表
+			// 填充 Member
+			vo.setMember(memberMap.get(attendees.getMemberId()));
+
+			// 填充 Tags
 			List<Long> relatedTagIds = attendeesTagMap.getOrDefault(attendees.getAttendeesId(),
 					Collections.emptyList());
-
-			// 獲取所有對應的 Tag
 			Set<Tag> tagSet = relatedTagIds.stream()
 					.map(tagMap::get)
-					.filter(Objects::nonNull) // 避免空值
+					.filter(Objects::nonNull)
 					.collect(Collectors.toSet());
 
-			// 將 tagSet 放入VO中
 			vo.setTagSet(tagSet);
+
+			// 填充簽到/退紀錄
+			vo.setCheckinRecordList(checkinRecordMap.getOrDefault(attendees.getAttendeesId(), Collections.emptyList()));
+			// 填充簽到狀態
+			vo.setIsCheckedIn(checkinStatusMap.getOrDefault(attendees.getAttendeesId(), false));
 
 			return vo;
 		}).collect(Collectors.toList());
 
-		// 10. 重新封装 VO 的分頁對象
-		voPage = new Page<>(pageInfo.getCurrent(), pageInfo.getSize(), attendeesPage.getTotal());
+		// 13. 塞回 VO 分頁
 		voPage.setRecords(voList);
-
 		return voPage;
 
 	}

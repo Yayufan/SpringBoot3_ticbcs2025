@@ -1,6 +1,7 @@
 package tw.com.ticbcs.manager;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -28,6 +29,19 @@ public class CheckinRecordManager {
 		// 找到這個與會者所有的checkin紀錄
 		LambdaQueryWrapper<CheckinRecord> checkinRecordWrapper = new LambdaQueryWrapper<>();
 		checkinRecordWrapper.eq(CheckinRecord::getAttendeesId, attendeesId);
+		List<CheckinRecord> checkinRecordList = checkinRecordMapper.selectList(checkinRecordWrapper);
+		return checkinRecordList;
+	}
+
+	/**
+	 * 根據 attendeesIds 找到對應與會者所有簽到/退紀錄
+	 * 
+	 * @param attendeesIds
+	 * @return
+	 */
+	public List<CheckinRecord> getCheckinRecordsByAttendeesIds(Collection<Long> attendeesIds) {
+		LambdaQueryWrapper<CheckinRecord> checkinRecordWrapper = new LambdaQueryWrapper<>();
+		checkinRecordWrapper.in(CheckinRecord::getAttendeesId, attendeesIds);
 		List<CheckinRecord> checkinRecordList = checkinRecordMapper.selectList(checkinRecordWrapper);
 		return checkinRecordList;
 	}
