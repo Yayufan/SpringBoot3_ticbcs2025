@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.pojo.DTO.SendEmailByTagDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagToAttendeesDTO;
+import tw.com.ticbcs.pojo.VO.AttendeesStatsVO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
@@ -166,6 +167,15 @@ public class AttendeesController {
 		attendeesPage = attendeesService.getAttendeesTagVOPageByQuery(pageInfo, queryText);
 
 		return R.ok(attendeesPage);
+	}
+
+	@Operation(summary = "查詢與會者簽到的統計數據")
+	@SaCheckRole("super-admin")
+	@Parameters({
+			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
+	@GetMapping("stats")
+	public R<AttendeesStatsVO> getAttendeesStatsVO() {
+		return R.ok(attendeesService.getAttendeesStatsVO());
 	}
 
 	@Operation(summary = "為與會者新增/更新/刪除 複數標籤")

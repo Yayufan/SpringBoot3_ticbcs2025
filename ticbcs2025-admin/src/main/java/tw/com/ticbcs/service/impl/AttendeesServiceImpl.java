@@ -41,9 +41,11 @@ import tw.com.ticbcs.manager.CheckinRecordManager;
 import tw.com.ticbcs.manager.MemberManager;
 import tw.com.ticbcs.mapper.AttendeesMapper;
 import tw.com.ticbcs.pojo.BO.CheckinInfoBO;
+import tw.com.ticbcs.pojo.BO.PresenceStatsBO;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
+import tw.com.ticbcs.pojo.VO.AttendeesStatsVO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
@@ -142,6 +144,30 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		}).collect(Collectors.toList());
 
 		return attendeesVOList;
+	}
+
+	@Override
+	public AttendeesStatsVO getAttendeesStatsVO() {
+		
+		AttendeesStatsVO attendeesStatsVO = new AttendeesStatsVO();
+
+		//查詢 應到 人數
+		Integer countTotalShouldAttend = baseMapper.countTotalShouldAttend();
+		attendeesStatsVO.setTotalShouldAttend(countTotalShouldAttend);
+
+		//查詢 已簽到 人數
+		Integer countCheckedIn = checkinRecordManager.getCountCheckedIn();
+		attendeesStatsVO.setTotalCheckedIn(countCheckedIn);
+
+		//未簽到人數
+		attendeesStatsVO.setTotalNotArrived(countTotalShouldAttend - countCheckedIn);
+
+		//查詢 尚在現場、已離場 人數
+		PresenceStatsBO presenceStatsBO = checkinRecordManager.getPresenceStats();
+		attendeesStatsVO.setTotalOnSite(presenceStatsBO.getTotalOnsite());
+		attendeesStatsVO.setTotalLeft(presenceStatsBO.getTotalLeft());
+
+		return attendeesStatsVO;
 	}
 
 	@Override

@@ -447,8 +447,6 @@ public class MinioUtil {
 		return url;
 	}
 
-
-
 	/**
 	 * 通常HTML src屬性中會帶有http://domain/...之類的，這邊要排除前墜，用於提取真正Minio內檔案的儲存路徑
 	 * 
@@ -470,7 +468,6 @@ public class MinioUtil {
 		return paths;
 	}
 
-	
 	/**
 	 * 提取單一 URL 的物件路徑（去除 bucket 名稱）。
 	 * 對於/topbs2025/invited-speaker圖片1_1745399281172.png可以找出objectPath
@@ -480,7 +477,7 @@ public class MinioUtil {
 	 * @param url        原始 URL，例如 "/topbs2025/invited-speaker圖片1_1745399281172.png"
 	 * @return 提取後的物件 key，例如 "invited-speaker圖片1_1745399281172.png"
 	 */
-	public  String extractPath(String bucketName, String url) {
+	public String extractPath(String bucketName, String url) {
 		Pattern pattern = Pattern.compile("/" + bucketName + "/(.+)");
 		Matcher matcher = pattern.matcher(url);
 		if (matcher.find()) {
@@ -488,7 +485,7 @@ public class MinioUtil {
 		}
 		throw new IllegalArgumentException("URL 不包含指定的 bucket 名稱: " + bucketName);
 	}
-	
+
 	/**
 	 * 資料庫中的檔案路徑會加上buckName儲存， 此功能用來抽取minio實際儲存的地址
 	 * 
@@ -551,12 +548,9 @@ public class MinioUtil {
 					}
 
 					zipOut.putNextEntry(zipEntry);
-
-					try {
-
-						// 獲取物件的inputStream流
-						InputStream in = minioClient.getObject(
-								GetObjectArgs.builder().bucket(bucketName).object(objectItem.getObjectName()).build());
+					// 獲取物件的inputStream流
+					try (InputStream in = minioClient.getObject(
+							GetObjectArgs.builder().bucket(bucketName).object(objectItem.getObjectName()).build());) {
 
 						byte[] buffer = new byte[4096];
 						int bytesRead;

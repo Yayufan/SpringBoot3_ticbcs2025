@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.mapper.CheckinRecordMapper;
 import tw.com.ticbcs.pojo.BO.CheckinInfoBO;
+import tw.com.ticbcs.pojo.BO.PresenceStatsBO;
 import tw.com.ticbcs.pojo.entity.CheckinRecord;
 
 @Component
@@ -44,6 +45,24 @@ public class CheckinRecordManager {
 		checkinRecordWrapper.in(CheckinRecord::getAttendeesId, attendeesIds);
 		List<CheckinRecord> checkinRecordList = checkinRecordMapper.selectList(checkinRecordWrapper);
 		return checkinRecordList;
+	}
+
+	/**
+	 * 獲取 已簽到 人數
+	 * 
+	 * @return
+	 */
+	public Integer getCountCheckedIn() {
+		return checkinRecordMapper.countCheckedIn();
+	}
+
+	/**
+	 * 獲取 尚在現場、已離場 人數
+	 * 
+	 * @return
+	 */
+	public PresenceStatsBO getPresenceStats() {
+		return checkinRecordMapper.selectPresenceStats();
 	}
 
 	/**

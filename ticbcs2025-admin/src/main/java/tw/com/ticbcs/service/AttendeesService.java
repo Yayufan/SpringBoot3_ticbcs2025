@@ -12,6 +12,7 @@ import com.google.zxing.WriterException;
 import jakarta.servlet.http.HttpServletResponse;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
+import tw.com.ticbcs.pojo.VO.AttendeesStatsVO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
@@ -76,6 +77,13 @@ public interface AttendeesService extends IService<Attendees> {
 	 */
 	IPage<AttendeesTagVO> getAttendeesTagVOPageByQuery(Page<Attendees> pageInfo, String queryText);
 
+	/**
+	 * 查詢與會者的簽到的統計資料
+	 * 
+	 * @return
+	 */
+	AttendeesStatsVO getAttendeesStatsVO();
+	
 	/**
 	 * 為與會者新增/更新/刪除 複數tag
 	 * 
