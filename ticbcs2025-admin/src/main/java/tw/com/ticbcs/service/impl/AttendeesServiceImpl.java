@@ -62,6 +62,7 @@ import tw.com.ticbcs.service.AsyncService;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.AttendeesTagService;
 import tw.com.ticbcs.service.TagService;
+import tw.com.ticbcs.utils.QrcodeUtil;
 
 /**
  * <p>
@@ -342,6 +343,14 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			attendeesExcel.setFirstCheckinTime(checkinInfoBO.getCheckinTime());
 			attendeesExcel.setLastCheckoutTime(checkinInfoBO.getCheckoutTime());
 
+			// 匯出專屬簽到/退 QRcode
+			try {
+				attendeesExcel.setQRcodeImage(QrcodeUtil.generateBase64QRCode(attendeesVO.getAttendeesId().toString(), 200, 200));
+			} catch (WriterException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			return attendeesExcel;
 
 		}).collect(Collectors.toList());
