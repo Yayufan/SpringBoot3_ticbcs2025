@@ -11,10 +11,12 @@ import com.google.zxing.WriterException;
 
 import jakarta.servlet.http.HttpServletResponse;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
+import tw.com.ticbcs.pojo.DTO.WalkInRegistrationDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesStatsVO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
+import tw.com.ticbcs.pojo.VO.CheckinRecordVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 
 /**
@@ -33,7 +35,7 @@ public interface AttendeesService extends IService<Attendees> {
 
 	IPage<AttendeesVO> getAttendeesPage(Page<Attendees> page);
 
-	void addAfterPayment(AddAttendeesDTO addAttendees);
+	Long addAfterPayment(AddAttendeesDTO addAttendees);
 
 	void addAttendees(AddAttendeesDTO addAttendees);
 
@@ -83,6 +85,15 @@ public interface AttendeesService extends IService<Attendees> {
 	 * @return
 	 */
 	AttendeesStatsVO getAttendeesStatsVO();
+	
+	
+	/**
+	 * 現場登記(包含註冊 - 簽到)
+	 * 
+	 * @param walkInRegistrationDTO
+	 * @return
+	 */
+	CheckinRecordVO walkInRegistration(WalkInRegistrationDTO walkInRegistrationDTO);
 	
 	/**
 	 * 為與會者新增/更新/刪除 複數tag

@@ -1,8 +1,6 @@
 package tw.com.ticbcs.controller;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -19,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.zxing.WriterException;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
@@ -30,13 +26,15 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.pojo.DTO.SendEmailByTagDTO;
+import tw.com.ticbcs.pojo.DTO.WalkInRegistrationDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagToAttendeesDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesStatsVO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
+import tw.com.ticbcs.pojo.VO.CheckinRecordVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.utils.QrcodeUtil;
@@ -167,6 +165,16 @@ public class AttendeesController {
 		attendeesPage = attendeesService.getAttendeesTagVOPageByQuery(pageInfo, queryText);
 
 		return R.ok(attendeesPage);
+	}
+
+	@Operation(summary = "現場登記(現場報名並簽到)")
+	@SaCheckRole("super-admin")
+	@Parameters({
+			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
+	@PostMapping("on-site")
+	public R<CheckinRecordVO> walkInRegistration(@RequestBody @Valid WalkInRegistrationDTO walkInRegistrationDTO) {
+		CheckinRecordVO checkinRecordVO = attendeesService.walkInRegistration(walkInRegistrationDTO);
+		return R.ok(checkinRecordVO);
 	}
 
 	@Operation(summary = "查詢與會者簽到的統計數據")

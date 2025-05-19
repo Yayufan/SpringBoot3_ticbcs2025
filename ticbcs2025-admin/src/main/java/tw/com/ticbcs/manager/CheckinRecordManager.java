@@ -9,9 +9,13 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import lombok.RequiredArgsConstructor;
+import tw.com.ticbcs.convert.CheckinRecordConvert;
+import tw.com.ticbcs.enums.CheckinActionTypeEnum;
+import tw.com.ticbcs.exception.CheckinRecordException;
 import tw.com.ticbcs.mapper.CheckinRecordMapper;
 import tw.com.ticbcs.pojo.BO.CheckinInfoBO;
 import tw.com.ticbcs.pojo.BO.PresenceStatsBO;
+import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddCheckinRecordDTO;
 import tw.com.ticbcs.pojo.entity.CheckinRecord;
 
 @Component
@@ -19,6 +23,7 @@ import tw.com.ticbcs.pojo.entity.CheckinRecord;
 public class CheckinRecordManager {
 
 	private final CheckinRecordMapper checkinRecordMapper;
+	private final CheckinRecordConvert checkinRecordConvert;
 
 	/**
 	 * 根據 attendeesId 找到與會者所有簽到/退紀錄
@@ -63,6 +68,36 @@ public class CheckinRecordManager {
 	 */
 	public PresenceStatsBO getPresenceStats() {
 		return checkinRecordMapper.selectPresenceStats();
+	}
+
+	public CheckinRecord addCheckinRecord(AddCheckinRecordDTO addCheckinRecordDTO) {
+
+		// 1.查詢指定 AttendeesId 最新的一筆
+		CheckinRecord latestRecord = checkinRecordMapper.selectOne(new LambdaQueryWrapper<CheckinRecord>()
+				.eq(CheckinRecord::getAttendeesId, addCheckinRecordDTO.getAttendeesId())
+				.orderByDesc(CheckinRecord::getCheckinRecordId)
+				.last("LIMIT 1"));
+
+		// 2.如果完全沒資料，代表他沒簽到過， 再判斷此次動作是否為簽退，如果是則拋出異常
+		if (latestRecord == null
+				&& CheckinActionTypeEnum.CHECKOUT.getValue().equals(addCheckinRecordDTO.getActionType())) {
+			throw new CheckinRecordException("沒有簽到記錄，不可簽退");
+		}
+
+		// 3.最新數據不為null，判斷是否操作行為一致，如果一致，拋出異常，告知不可連續簽到 或 簽退
+		if (latestRecord != null && latestRecord.getActionType().equals(addCheckinRecordDTO.getActionType())) {
+			throw new CheckinRecordException("不可連續簽到 或 連續簽退");
+		}
+
+		// 4.轉換成entity對象
+		CheckinRecord checkinRecord = checkinRecordConvert.addDTOToEntity(addCheckinRecordDTO);
+		checkinRecord.setActionTime(LocalDateTime.now());
+
+		// 5.新增進資料庫
+		checkinRecordMapper.insert(checkinRecord);
+
+		// 6.返回主鍵ID
+		return checkinRecord;
 	}
 
 	/**

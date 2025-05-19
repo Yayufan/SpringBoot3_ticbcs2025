@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import lombok.RequiredArgsConstructor;
+import tw.com.ticbcs.exception.RegisteredAlreadyExistsException;
 import tw.com.ticbcs.mapper.MemberMapper;
 import tw.com.ticbcs.pojo.entity.Member;
 
@@ -59,5 +60,23 @@ public class MemberManager {
 		return memberList;
 
 	}
+
+	public Long addMemberOnSite(Member member) {
+		
+		//判斷Email有無被註冊過
+		LambdaQueryWrapper<Member> memberQueryWrapper = new LambdaQueryWrapper<>();
+		memberQueryWrapper.eq(Member::getEmail, member.getEmail());
+		Long memberCount = memberMapper.selectCount(memberQueryWrapper);
+
+		if (memberCount > 0) {
+			throw new RegisteredAlreadyExistsException("This E-Mail has been registered");
+		}
+
+		memberMapper.insert(member);
+		
+		
+		
+		return member.getMemberId();
+	};
 
 }

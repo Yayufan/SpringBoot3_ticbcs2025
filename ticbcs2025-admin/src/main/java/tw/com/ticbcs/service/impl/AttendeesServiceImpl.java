@@ -33,6 +33,7 @@ import com.google.zxing.WriterException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
+import tw.com.ticbcs.convert.CheckinRecordConvert;
 import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.enums.CheckinActionTypeEnum;
 import tw.com.ticbcs.exception.EmailException;
@@ -43,11 +44,14 @@ import tw.com.ticbcs.mapper.AttendeesMapper;
 import tw.com.ticbcs.pojo.BO.CheckinInfoBO;
 import tw.com.ticbcs.pojo.BO.PresenceStatsBO;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
+import tw.com.ticbcs.pojo.DTO.WalkInRegistrationDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
+import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddCheckinRecordDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesStatsVO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
+import tw.com.ticbcs.pojo.VO.CheckinRecordVO;
 import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.AttendeesTag;
 import tw.com.ticbcs.pojo.entity.CheckinRecord;
@@ -75,6 +79,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	private final MemberManager memberManager;
 	private final CheckinRecordManager checkinRecordManager;
+	private final CheckinRecordConvert checkinRecordConvert;
 	private final AttendeesManager attendeesManager;
 	private final AttendeesConvert attendeesConvert;
 	private final AttendeesTagService attendeesTagService;
@@ -148,7 +153,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Override
 	public AttendeesStatsVO getAttendeesStatsVO() {
-		
+
 		AttendeesStatsVO attendeesStatsVO = new AttendeesStatsVO();
 
 		//查詢 應到 人數
@@ -170,6 +175,45 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		return attendeesStatsVO;
 	}
 
+	@Transactional
+	@Override
+	public CheckinRecordVO walkInRegistration(WalkInRegistrationDTO walkInRegistrationDTO) {
+
+		// 1.創建Member對象，新增進member table
+		// 這邊僅新增Member 不延伸新增訂單、訂單細項、memberTag關聯，因為不需要只會讓數據不清楚
+		Member member = new Member();
+		member.setEmail(walkInRegistrationDTO.getEmail());
+		member.setChineseName(walkInRegistrationDTO.getChineseName());
+		member.setFirstName(walkInRegistrationDTO.getFirstName());
+		member.setLastName(walkInRegistrationDTO.getLastName());
+		member.setCategory(walkInRegistrationDTO.getCategory());
+		Long memberId = memberManager.addMemberOnSite(member);
+
+		// 2.創建attendeesDTO對象，新增進attendees table
+		AddAttendeesDTO addAttendeesDTO = new AddAttendeesDTO();
+		addAttendeesDTO.setEmail(member.getEmail());
+		addAttendeesDTO.setMemberId(memberId);
+		Long attendeesId = this.addAfterPayment(addAttendeesDTO);
+
+		// 3.創建checkinRecordDTO對象，新增進checkinRecord table
+		AddCheckinRecordDTO addCheckinRecordDTO = new AddCheckinRecordDTO();
+		addCheckinRecordDTO.setAttendeesId(attendeesId);
+		addCheckinRecordDTO.setActionType(CheckinActionTypeEnum.CHECKIN.getValue());
+		CheckinRecord checkinRecord = checkinRecordManager.addCheckinRecord(addCheckinRecordDTO);
+
+		// 4.查詢此簽到者的基本資訊
+		AttendeesVO attendeesVO = attendeesManager.getAttendeesVOByAttendeesId(checkinRecord.getAttendeesId());
+
+		// 5.實體類轉換成VO
+		CheckinRecordVO checkinRecordVO = checkinRecordConvert.entityToVO(checkinRecord);
+
+		// 6.vo中填入與會者VO對象
+		checkinRecordVO.setAttendeesVO(attendeesVO);
+
+		return checkinRecordVO;
+
+	}
+
 	@Override
 	public void addAttendees(AddAttendeesDTO addAttendees) {
 		// TODO Auto-generated method stub
@@ -178,7 +222,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Transactional
 	@Override
-	public void addAfterPayment(AddAttendeesDTO addAttendees) {
+	public Long addAfterPayment(AddAttendeesDTO addAttendees) {
 
 		Attendees attendees = attendeesConvert.addDTOToEntity(addAttendees);
 		RLock lock = redissonClient.getLock("attendee:sequence_lock");
@@ -249,6 +293,9 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 			}
 
 		}
+
+		// 7.返回主鍵ID
+		return attendees.getAttendeesId();
 
 	}
 
