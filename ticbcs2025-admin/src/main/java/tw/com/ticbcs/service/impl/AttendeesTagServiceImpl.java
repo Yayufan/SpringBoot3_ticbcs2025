@@ -68,6 +68,14 @@ public class AttendeesTagServiceImpl extends ServiceImpl<AttendeesTagMapper, Att
 	}
 
 	@Override
+	public void addAttendeesTag(Long attendeesId, Long tagId) {
+		AttendeesTag attendeesTag = new AttendeesTag();
+		attendeesTag.setAttendeesId(attendeesId);
+		attendeesTag.setTagId(tagId);
+		baseMapper.insert(attendeesTag);
+    }
+
+	@Override
 	public void removeAttendeesFromTag(Long tagId, Set<Long> attendeessToRemove) {
 		LambdaQueryWrapper<AttendeesTag> deleteAttendeesTagWrapper = new LambdaQueryWrapper<>();
 		deleteAttendeesTagWrapper.eq(AttendeesTag::getTagId, tagId)

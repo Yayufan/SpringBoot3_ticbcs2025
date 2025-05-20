@@ -25,11 +25,19 @@ public interface MemberTagService extends IService<MemberTag> {
 	List<MemberTag> getMemberTagByTagId(Long tagId);
 
 	/**
-	 * 為一個tag和member新增關聯
+	 * 透過MemberTag 建立關聯
 	 * 
 	 * @param memberTag
 	 */
 	void addMemberTag(MemberTag memberTag);
+	
+	/**
+	 * 透過 memberId 和 tagId 建立關聯
+	 * 
+	 * @param memberId 會員ID
+	 * @param tagId 標籤ID
+	 */
+	void addMemberTag(Long memberId, Long tagId);
 	
 	/**
 	 * 移除此 tag 與多位 member 關聯

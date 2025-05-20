@@ -52,11 +52,20 @@ public interface AttendeesTagService extends IService<AttendeesTag> {
 	List<AttendeesTag> getAttendeesTagByTagIds(Collection<Long> tagIds);
 
 	/**
-	 * 為一個tag和attendees新增關聯
+	 * 透過 AttendeesTag 建立關聯
 	 * 
 	 * @param attendeesTag
 	 */
 	void addAttendeesTag(AttendeesTag attendeesTag);
+	
+	
+	/**
+	 * 透過與會者ID 和 標籤ID 建立關聯
+	 * 
+	 * @param attendeesId 與會者ID
+	 * @param tagId 標籤ID
+	 */
+	 void addAttendeesTag(Long attendeesId, Long tagId);
 
 	/**
 	 * 根據標籤 ID 刪除多個與會者 關聯

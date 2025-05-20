@@ -51,5 +51,20 @@ public class TagManager {
 		String desc = "會員分組標籤 (第 " + groupIndex + " 組)";
 		return this.createTag(tagType, tagName, desc, color);
 	}
+	
+	public Tag getOrCreateAttendeesGroupTag(int groupIndex) {
+		String tagType = "attendees";
+		String tagName = String.format("A-group-%02d", groupIndex);
+		Tag tag = this.getTagByTypeAndName(tagType, tagName);
+		
+
+		if (tag != null)
+			return tag;
+
+		String color = TagColorUtil.adjustColor("#001F54", groupIndex, 5);
+		String desc = "與會者分組標籤 (第 " + groupIndex + " 組)";
+		return this.createTag(tagType, tagName, desc, color);
+		
+	}
 
 }

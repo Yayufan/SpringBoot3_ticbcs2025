@@ -34,13 +34,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.CheckinRecordConvert;
-import tw.com.ticbcs.convert.TagConvert;
 import tw.com.ticbcs.enums.CheckinActionTypeEnum;
 import tw.com.ticbcs.exception.EmailException;
 import tw.com.ticbcs.manager.AttendeesManager;
 import tw.com.ticbcs.manager.CheckinRecordManager;
 import tw.com.ticbcs.manager.MemberManager;
-import tw.com.ticbcs.manager.MemberTagManager;
 import tw.com.ticbcs.manager.OrdersItemManager;
 import tw.com.ticbcs.manager.OrdersManager;
 import tw.com.ticbcs.manager.TagManager;
@@ -51,7 +49,6 @@ import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.DTO.WalkInRegistrationDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddAttendeesDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddCheckinRecordDTO;
-import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddTagDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesStatsVO;
 import tw.com.ticbcs.pojo.VO.AttendeesTagVO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
@@ -66,9 +63,9 @@ import tw.com.ticbcs.pojo.excelPojo.AttendeesExcel;
 import tw.com.ticbcs.service.AsyncService;
 import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.AttendeesTagService;
+import tw.com.ticbcs.service.MemberTagService;
 import tw.com.ticbcs.service.TagService;
 import tw.com.ticbcs.utils.QrcodeUtil;
-import tw.com.ticbcs.utils.TagColorUtil;
 
 /**
  * <p>
@@ -85,7 +82,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	private static final String DAILY_EMAIL_QUOTA_KEY = "email:dailyQuota";
 
 	private final MemberManager memberManager;
-	private final MemberTagManager memberTagManager;
+	private final MemberTagService memberTagService;
 	private final OrdersManager ordersManager;
 	private final OrdersItemManager ordersItemManager;
 	private final TagManager tagManager;
@@ -95,7 +92,6 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	private final AttendeesConvert attendeesConvert;
 	private final AttendeesTagService attendeesTagService;
 	private final TagService tagService;
-	private final TagConvert tagConvert;
 	private final AsyncService asyncService;
 
 	@Qualifier("businessRedissonClient")
@@ -208,7 +204,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		Tag groupTag = tagManager.getOrCreateMemberGroupTag(groupIndex);
 
 		// 6. 關聯 Member 與 Tag
-		memberTagManager.addMemberTag(member.getMemberId(), groupTag.getTagId());
+		memberTagService.addMemberTag(member.getMemberId(), groupTag.getTagId());
 
 		// 7. 創建與會者 和 簽到記錄，並返回簽到時的格式
 		CheckinRecordVO checkinRecordVO = this.createAttendeeAndCheckin(member);
@@ -273,47 +269,20 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				// 如果 設定城當前最大sequence_no
 				attendees.setSequenceNo(nextSeq);
 				baseMapper.insert(attendees);
-
-				//每200名與會者(Attendees)設置一個tag, A-group-01, M-group-02(補零兩位數)
-				String baseTagName = "A-group-%02d";
-				// 分組數量
-				Integer groupSize = 200;
-				// groupIndex組別索引
-				Integer groupIndex;
+				
 
 				//當前數量，上面已經新增過至少一人，不可能為0
 				Long currentCount = baseMapper.selectCount(null);
+				// 分組數量
+				Integer groupSize = 200;
+				// groupIndex組別索引，計算組別 (向上取整，例如 201人 → 第2組)
+				Integer groupIndex = (int) Math.ceil(currentCount / (double) groupSize);
 
-				// 2. 計算組別 (向上取整，例如 201人 → 第2組)
-				groupIndex = (int) Math.ceil(currentCount / (double) groupSize);
+				// 獲取或創建Group Tag
+				Tag groupTag = tagManager.getOrCreateAttendeesGroupTag(groupIndex);
 
-				// 3. 生成 Tag 名稱 (補零兩位數)
-				String tagName = String.format(baseTagName, groupIndex);
-				String tagType = "attendees";
-
-				// 4. 查詢是否已有該 Tag
-				Tag existingTag = tagService.getTagByTypeAndName(tagType, tagName);
-
-				// 5. 如果沒有就創建 Tag
-				if (existingTag == null) {
-					AddTagDTO addTagDTO = new AddTagDTO();
-					addTagDTO.setType(tagType);
-					addTagDTO.setName(tagName);
-					addTagDTO.setDescription("與會者分組標籤 (第 " + groupIndex + " 組)");
-					addTagDTO.setStatus(0);
-					String adjustColor = TagColorUtil.adjustColor("#001F54", groupIndex, 5);
-					addTagDTO.setColor(adjustColor);
-					Long insertTagId = tagService.insertTag(addTagDTO);
-					Tag currentTag = tagConvert.addDTOToEntity(addTagDTO);
-					currentTag.setTagId(insertTagId);
-					existingTag = currentTag;
-				}
-
-				// 6.透過tagId 去 關聯表 進行關聯新增
-				AttendeesTag attendeesTag = new AttendeesTag();
-				attendeesTag.setAttendeesId(attendees.getAttendeesId());
-				attendeesTag.setTagId(existingTag.getTagId());
-				attendeesTagService.addAttendeesTag(attendeesTag);
+				// 將與會者 與 Tag 做連結
+				attendeesTagService.addAttendeesTag(attendees.getAttendeesId(), groupTag.getTagId());
 
 			}
 

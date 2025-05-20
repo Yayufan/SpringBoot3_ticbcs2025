@@ -36,6 +36,15 @@ public class MemberTagServiceImpl extends ServiceImpl<MemberTagMapper, MemberTag
 	public void addMemberTag(MemberTag memberTag) {
 		baseMapper.insert(memberTag);
 	}
+	
+	@Override
+	public void addMemberTag(Long memberId, Long tagId) {
+        MemberTag memberTag = new MemberTag();
+        memberTag.setMemberId(memberId);
+        memberTag.setTagId(tagId);
+        baseMapper.insert(memberTag);
+    }
+	
 
 	@Override
 	public void removeTagRelationsForMembers(Long tagId, Set<Long> membersToRemove) {
