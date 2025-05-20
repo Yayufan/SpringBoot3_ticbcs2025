@@ -567,6 +567,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		}).collect(Collectors.toList());
 
 		// 12. 塞回 VO 分頁
+		voPage.setTotal(attendeesPage.getTotal());
 		voPage.setRecords(voList);
 		return voPage;
 
@@ -705,6 +706,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		}).collect(Collectors.toList());
 
 		// 13. 塞回 VO 分頁
+		voPage.setTotal(attendeesPage.getTotal());
 		voPage.setRecords(voList);
 		return voPage;
 
