@@ -76,6 +76,7 @@ import tw.com.ticbcs.service.MemberTagService;
 import tw.com.ticbcs.service.OrdersItemService;
 import tw.com.ticbcs.service.OrdersService;
 import tw.com.ticbcs.service.TagService;
+import tw.com.ticbcs.utils.TagColorUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -356,7 +357,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 			addTagDTO.setName(tagName);
 			addTagDTO.setDescription("會員分組標籤 (第 " + groupIndex + " 組)");
 			addTagDTO.setStatus(0);
-			String adjustColor = tagService.adjustColor("#4A7056", groupIndex, 5);
+			String adjustColor = TagColorUtil.adjustColor("#4A7056", groupIndex, 5);
 			addTagDTO.setColor(adjustColor);
 			Long insertTagId = tagService.insertTag(addTagDTO);
 			Tag currentTag = tagConvert.addDTOToEntity(addTagDTO);
@@ -600,7 +601,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 			addTagDTO.setName(tagName);
 			addTagDTO.setDescription("會員分組標籤 (第 " + groupIndex + " 組)");
 			addTagDTO.setStatus(0);
-			String adjustColor = tagService.adjustColor("#4A7056", groupIndex, 5);
+			String adjustColor = TagColorUtil.adjustColor("#4A7056", groupIndex, 5);
 			addTagDTO.setColor(adjustColor);
 			Long insertTagId = tagService.insertTag(addTagDTO);
 			Tag currentTag = tagConvert.addDTOToEntity(addTagDTO);

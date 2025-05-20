@@ -40,6 +40,10 @@ import tw.com.ticbcs.exception.EmailException;
 import tw.com.ticbcs.manager.AttendeesManager;
 import tw.com.ticbcs.manager.CheckinRecordManager;
 import tw.com.ticbcs.manager.MemberManager;
+import tw.com.ticbcs.manager.MemberTagManager;
+import tw.com.ticbcs.manager.OrdersItemManager;
+import tw.com.ticbcs.manager.OrdersManager;
+import tw.com.ticbcs.manager.TagManager;
 import tw.com.ticbcs.mapper.AttendeesMapper;
 import tw.com.ticbcs.pojo.BO.CheckinInfoBO;
 import tw.com.ticbcs.pojo.BO.PresenceStatsBO;
@@ -56,6 +60,7 @@ import tw.com.ticbcs.pojo.entity.Attendees;
 import tw.com.ticbcs.pojo.entity.AttendeesTag;
 import tw.com.ticbcs.pojo.entity.CheckinRecord;
 import tw.com.ticbcs.pojo.entity.Member;
+import tw.com.ticbcs.pojo.entity.Orders;
 import tw.com.ticbcs.pojo.entity.Tag;
 import tw.com.ticbcs.pojo.excelPojo.AttendeesExcel;
 import tw.com.ticbcs.service.AsyncService;
@@ -63,6 +68,7 @@ import tw.com.ticbcs.service.AttendeesService;
 import tw.com.ticbcs.service.AttendeesTagService;
 import tw.com.ticbcs.service.TagService;
 import tw.com.ticbcs.utils.QrcodeUtil;
+import tw.com.ticbcs.utils.TagColorUtil;
 
 /**
  * <p>
@@ -79,6 +85,10 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	private static final String DAILY_EMAIL_QUOTA_KEY = "email:dailyQuota";
 
 	private final MemberManager memberManager;
+	private final MemberTagManager memberTagManager;
+	private final OrdersManager ordersManager;
+	private final OrdersItemManager ordersItemManager;
+	private final TagManager tagManager;
 	private final CheckinRecordManager checkinRecordManager;
 	private final CheckinRecordConvert checkinRecordConvert;
 	private final AttendeesManager attendeesManager;
@@ -181,38 +191,60 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	public CheckinRecordVO walkInRegistration(WalkInRegistrationDTO walkInRegistrationDTO) {
 
 		// 1.創建Member對象，新增進member table
-		// 這邊僅新增Member 不延伸新增訂單、訂單細項、memberTag關聯，因為不需要只會讓數據不清楚
-		Member member = new Member();
-		member.setEmail(walkInRegistrationDTO.getEmail());
-		member.setChineseName(walkInRegistrationDTO.getChineseName());
-		member.setFirstName(walkInRegistrationDTO.getFirstName());
-		member.setLastName(walkInRegistrationDTO.getLastName());
-		member.setCategory(walkInRegistrationDTO.getCategory());
-		Long memberId = memberManager.addMemberOnSite(member);
+		Member member = memberManager.addMemberOnSite(walkInRegistrationDTO);
 
-		// 2.創建attendeesDTO對象，新增進attendees table
+		// 2.創建已繳費訂單-預設他會在現場繳費完成
+		Orders orders = ordersManager.createZeroAmountRegistrationOrder(member.getMemberId());
+
+		// 3.因為是綁在註冊時的訂單產生，所以這邊要再設定訂單的細節
+		ordersItemManager.addRegistrationOrderItem(orders.getOrdersId(), orders.getTotalAmount());
+
+		// 4. 計算目前會員數量 → 分組索引
+		Long currentCount = memberManager.getMemberCount();
+		int groupSize = 200;
+		int groupIndex = (int) Math.ceil(currentCount / (double) groupSize);
+
+		// 5. 呼叫 Manager 拿到 Tag（不存在則新增Tag）
+		Tag groupTag = tagManager.getOrCreateMemberGroupTag(groupIndex);
+
+		// 6. 關聯 Member 與 Tag
+		memberTagManager.addMemberTag(member.getMemberId(), groupTag.getTagId());
+
+		// 7. 創建與會者 和 簽到記錄，並返回簽到時的格式
+		CheckinRecordVO checkinRecordVO = this.createAttendeeAndCheckin(member);
+
+		return checkinRecordVO;
+
+	}
+
+	/**
+	 * 用於現場註冊時搭配使用
+	 * 
+	 * @param member
+	 * @return
+	 */
+	private CheckinRecordVO createAttendeeAndCheckin(Member member) {
+
+		// 1. 建立 Attendee
 		AddAttendeesDTO addAttendeesDTO = new AddAttendeesDTO();
 		addAttendeesDTO.setEmail(member.getEmail());
-		addAttendeesDTO.setMemberId(memberId);
+		addAttendeesDTO.setMemberId(member.getMemberId());
 		Long attendeesId = this.addAfterPayment(addAttendeesDTO);
 
-		// 3.創建checkinRecordDTO對象，新增進checkinRecord table
+		// 2. 建立 CheckinRecord
 		AddCheckinRecordDTO addCheckinRecordDTO = new AddCheckinRecordDTO();
 		addCheckinRecordDTO.setAttendeesId(attendeesId);
 		addCheckinRecordDTO.setActionType(CheckinActionTypeEnum.CHECKIN.getValue());
 		CheckinRecord checkinRecord = checkinRecordManager.addCheckinRecord(addCheckinRecordDTO);
 
-		// 4.查詢此簽到者的基本資訊
-		AttendeesVO attendeesVO = attendeesManager.getAttendeesVOByAttendeesId(checkinRecord.getAttendeesId());
-
-		// 5.實體類轉換成VO
+		// 3. VO 組裝
+		AttendeesVO attendeesVO = attendeesManager.getAttendeesVOByAttendeesId(attendeesId);
 		CheckinRecordVO checkinRecordVO = checkinRecordConvert.entityToVO(checkinRecord);
 
-		// 6.vo中填入與會者VO對象
+		// 4. vo中填入與會者VO對象
 		checkinRecordVO.setAttendeesVO(attendeesVO);
 
 		return checkinRecordVO;
-
 	}
 
 	@Override
@@ -269,7 +301,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 					addTagDTO.setName(tagName);
 					addTagDTO.setDescription("與會者分組標籤 (第 " + groupIndex + " 組)");
 					addTagDTO.setStatus(0);
-					String adjustColor = tagService.adjustColor("#001F54", groupIndex, 5);
+					String adjustColor = TagColorUtil.adjustColor("#001F54", groupIndex, 5);
 					addTagDTO.setColor(adjustColor);
 					Long insertTagId = tagService.insertTag(addTagDTO);
 					Tag currentTag = tagConvert.addDTOToEntity(addTagDTO);
@@ -345,12 +377,13 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 			// 匯出專屬簽到/退 QRcode
 			try {
-				attendeesExcel.setQRcodeImage(QrcodeUtil.generateBase64QRCode(attendeesVO.getAttendeesId().toString(), 200, 200));
+				attendeesExcel.setQRcodeImage(
+						QrcodeUtil.generateBase64QRCode(attendeesVO.getAttendeesId().toString(), 200, 200));
 			} catch (WriterException | IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			return attendeesExcel;
 
 		}).collect(Collectors.toList());

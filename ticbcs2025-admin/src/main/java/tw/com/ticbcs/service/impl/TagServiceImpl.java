@@ -1,6 +1,5 @@
 package tw.com.ticbcs.service.impl;
 
-import java.awt.Color;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -301,21 +300,6 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
 	}
 
-	// 用於計算相似顏色的tag color
-	public String adjustColor(String hexColor, int groupIndex, int stepPercent) {
-		Color color = Color.decode(hexColor);
 
-		// 轉 HSB (Hue, Saturation, Brightness)
-		float[] hsbVals = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
-
-		// 增加亮度 (Brightness)
-		float newBrightness = Math.min(1.0f, hsbVals[2] + (groupIndex - 1) * (stepPercent / 100f));
-
-		// 轉回 RGB
-		int rgb = Color.HSBtoRGB(hsbVals[0], hsbVals[1], newBrightness);
-
-		// 格式化 Hex
-		return String.format("#%06X", (0xFFFFFF & rgb));
-	}
 
 }

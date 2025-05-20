@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.exception.RegisteredAlreadyExistsException;
 import tw.com.ticbcs.mapper.MemberMapper;
+import tw.com.ticbcs.pojo.DTO.WalkInRegistrationDTO;
 import tw.com.ticbcs.pojo.entity.Member;
 
 @Component
@@ -61,7 +62,18 @@ public class MemberManager {
 
 	}
 
-	public Long addMemberOnSite(Member member) {
+	public Long getMemberCount() {
+		return memberMapper.selectCount(null);
+	};
+	
+	public Member addMemberOnSite(WalkInRegistrationDTO walkInRegistrationDTO) {
+		
+		Member member = new Member();
+		member.setEmail(walkInRegistrationDTO.getEmail());
+		member.setChineseName(walkInRegistrationDTO.getChineseName());
+		member.setFirstName(walkInRegistrationDTO.getFirstName());
+		member.setLastName(walkInRegistrationDTO.getLastName());
+		member.setCategory(walkInRegistrationDTO.getCategory());
 		
 		//判斷Email有無被註冊過
 		LambdaQueryWrapper<Member> memberQueryWrapper = new LambdaQueryWrapper<>();
@@ -76,7 +88,7 @@ public class MemberManager {
 		
 		
 		
-		return member.getMemberId();
+		return member;
 	};
 
 }
