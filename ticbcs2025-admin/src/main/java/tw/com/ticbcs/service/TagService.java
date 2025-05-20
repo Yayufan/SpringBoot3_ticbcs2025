@@ -2,6 +2,7 @@ package tw.com.ticbcs.service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -69,6 +70,15 @@ public interface TagService extends IService<Tag> {
 	 * @return
 	 */
 	IPage<Tag> getAllTag(Page<Tag> page, String type);
+	
+	/**
+	 * 根據 與會者 和 標籤 關聯關係 的映射，拿到 與會者 和 真正標籤的映射
+	 * 
+	 * @param attendeesTagMap
+	 * @return
+	 */
+	Map<Long, Tag> getTagMapFromAttendeesTag(Map<Long, List<Long>> attendeesTagMap);
+	
 
 	/**
 	 * 獲取單一標籤
@@ -131,5 +141,21 @@ public interface TagService extends IService<Tag> {
 	 * @param tagId
 	 */
 	void assignAttendeesToTag(List<Long> targetAttendeesIdList, Long tagId);
+	
+	
+	/**
+	 * 獲取或創建MemberGroupTag
+	 * 
+	 * @param groupIndex 分組的索引,需 >= 1
+	 * @return
+	 */
+	Tag getOrCreateMemberGroupTag(int groupIndex);
 
+	/**
+	 * 獲取或創建AttendeesGroupTag
+	 * 
+	 * @param groupIndex 分組的索引,需 >= 1
+	 * @return
+	 */
+	Tag getOrCreateAttendeesGroupTag(int groupIndex);
 }

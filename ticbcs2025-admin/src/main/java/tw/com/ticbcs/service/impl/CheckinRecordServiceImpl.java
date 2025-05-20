@@ -3,7 +3,6 @@ package tw.com.ticbcs.service.impl;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.excel.EasyExcel;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -23,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.CheckinRecordConvert;
 import tw.com.ticbcs.enums.CheckinActionTypeEnum;
-import tw.com.ticbcs.exception.CheckinRecordException;
 import tw.com.ticbcs.manager.AttendeesManager;
 import tw.com.ticbcs.manager.CheckinRecordManager;
 import tw.com.ticbcs.manager.MemberManager;
@@ -143,7 +140,7 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 				.collect(Collectors.toSet());
 
 		// 2.透過去重的與會者ID拿到資料
-		List<AttendeesVO> attendeesVOList = attendeesManager.getAttendeesVOByIds(attendeesIdSet);
+		List<AttendeesVO> attendeesVOList = attendeesManager.getAttendeesVOByAttendeesIds(attendeesIdSet);
 
 		// 3.做成資料映射attendeesID 對應 AttendeesVO
 		Map<Long, AttendeesVO> AttendeesVOMap = attendeesVOList.stream()

@@ -1,9 +1,13 @@
 package tw.com.ticbcs.service.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +34,7 @@ import tw.com.ticbcs.service.MemberTagService;
 import tw.com.ticbcs.service.PaperReviewerTagService;
 import tw.com.ticbcs.service.PaperTagService;
 import tw.com.ticbcs.service.TagService;
+import tw.com.ticbcs.utils.TagColorUtil;
 
 /**
  * <p>
@@ -91,6 +96,27 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 		tagQueryWrapper.eq(StringUtils.isNotEmpty(type), Tag::getType, type);
 		Page<Tag> tagPage = baseMapper.selectPage(page, tagQueryWrapper);
 		return tagPage;
+	}
+
+	@Override
+	public Map<Long, Tag> getTagMapFromAttendeesTag(Map<Long, List<Long>> attendeesTagMap) {
+		/**
+		 * attendeesTagMap.values() 获取 attendeesTagMap 中所有的值，即 List<Long>
+		 * 的集合,長這樣[[],[],[]]。
+		 * .stream() 将这个集合转换为一个流（Stream）。
+		 * flatMap(Collection::stream) 将每个 List<Long> 转换为一个流，并将所有这些流合并成一个单一的流。,轉換成[]
+		 * collect(Collectors.toSet()) 将流中的所有 Tag ID 收集到一个 Set<Long> 中，这样可以确保 Tag ID
+		 * 的唯一性。
+		 */
+		Set<Long> tagIds = attendeesTagMap.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+
+		// 如果tagIds為空,則返回空Map
+		if (tagIds.isEmpty())
+			return Collections.emptyMap();
+
+		// 返回tagId 和 Tag 的映射
+		List<Tag> tags = getTagByTagIds(new ArrayList<>(tagIds));
+		return tags.stream().collect(Collectors.toMap(Tag::getTagId, Function.identity()));
 	}
 
 	@Override
@@ -300,6 +326,46 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
 	}
 
+	@Override
+	public Tag getOrCreateMemberGroupTag(int groupIndex) {
+		String tagType = "member";
+		String tagName = String.format("M-group-%02d", groupIndex);
+		Tag tag = this.getTagByTypeAndName(tagType, tagName);
+
+		if (tag != null)
+			return tag;
+
+		String color = TagColorUtil.adjustColor("#4A7056", groupIndex, 5);
+		String desc = "會員分組標籤 (第 " + groupIndex + " 組)";
+		return this.createTag(tagType, tagName, desc, color);
+	}
+
+	@Override
+	public Tag getOrCreateAttendeesGroupTag(int groupIndex) {
+		String tagType = "attendees";
+		String tagName = String.format("A-group-%02d", groupIndex);
+		Tag tag = this.getTagByTypeAndName(tagType, tagName);
+		
+
+		if (tag != null)
+			return tag;
+
+		String color = TagColorUtil.adjustColor("#001F54", groupIndex, 5);
+		String desc = "與會者分組標籤 (第 " + groupIndex + " 組)";
+		return this.createTag(tagType, tagName, desc, color);
+		
+	}
+	
+	private Tag createTag(String type, String name, String description, String color) {
+		Tag tag = new Tag();
+		tag.setType(type);
+		tag.setName(name);
+		tag.setDescription(description);
+		tag.setStatus(0);
+		tag.setColor(color);
+		baseMapper.insert(tag);
+		return tag;
+	}
 
 
 }

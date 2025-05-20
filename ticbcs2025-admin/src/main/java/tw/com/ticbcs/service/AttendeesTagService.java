@@ -1,13 +1,13 @@
 package tw.com.ticbcs.service;
 
-import tw.com.ticbcs.pojo.entity.AttendeesTag;
-import tw.com.ticbcs.pojo.entity.AttendeesTag;
-
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import tw.com.ticbcs.pojo.entity.AttendeesTag;
 
 /**
  * <p>
@@ -27,6 +27,15 @@ public interface AttendeesTagService extends IService<AttendeesTag> {
 	 */
 	List<AttendeesTag> getAttendeesTagByAttendeesId(Long attendeesId);
 
+	/**
+	 * 根據 attendeesIds 查詢 與會者ID 和 標籤 關聯關係 的映射
+	 * 
+	 * @param attendeesIds
+	 * @return
+	 */
+	Map<Long, List<Long>> getAttendeesTagMapByAttendeesIds(Collection<Long> attendeesIds);
+	
+	
 	/**
 	 * 根據 tagId 查詢與之有關的所有Attendees關聯
 	 * 
