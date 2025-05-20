@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import tw.com.ticbcs.pojo.DTO.UndoCheckinDTO;
 import tw.com.ticbcs.pojo.DTO.addEntityDTO.AddCheckinRecordDTO;
 import tw.com.ticbcs.pojo.DTO.putEntityDTO.PutCheckinRecordDTO;
 import tw.com.ticbcs.pojo.VO.CheckinRecordVO;
@@ -88,6 +89,16 @@ public class CheckinRecordController {
 		return R.ok(checkinRecord);
 	}
 
+	@PutMapping("undo-checkin")
+	@Parameters({
+			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
+	@Operation(summary = "撤銷最後一筆簽到紀錄")
+	@SaCheckRole("super-admin")
+	public R<CheckinRecord> undoCheckin(@RequestBody @Valid UndoCheckinDTO undoCheckinDTO) {
+		checkinRecordService.undoLastCheckin(undoCheckinDTO.getAttendeesId());
+		return R.ok();
+	}
+
 	@PutMapping
 	@Parameters({
 			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
@@ -118,7 +129,7 @@ public class CheckinRecordController {
 		return R.ok();
 
 	}
-	
+
 	@Operation(summary = "下載簽到/退紀錄 excel列表")
 	@SaCheckRole("super-admin")
 	@Parameters({

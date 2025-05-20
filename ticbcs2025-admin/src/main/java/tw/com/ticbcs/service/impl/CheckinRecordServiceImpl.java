@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.excel.EasyExcel;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import tw.com.ticbcs.convert.AttendeesConvert;
 import tw.com.ticbcs.convert.CheckinRecordConvert;
 import tw.com.ticbcs.enums.CheckinActionTypeEnum;
+import tw.com.ticbcs.exception.CheckinRecordException;
 import tw.com.ticbcs.manager.AttendeesManager;
 import tw.com.ticbcs.manager.CheckinRecordManager;
 import tw.com.ticbcs.manager.MemberManager;
@@ -108,11 +110,33 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 
 		// 1.新增簽到記錄
 		CheckinRecord checkinRecord = checkinRecordManager.addCheckinRecord(addCheckinRecordDTO);
-		
+
 		// 2.準備返回的數據
 		return this.getCheckinRecord(checkinRecord.getCheckinRecordId());
 
 	}
+
+	@Override
+	public void undoLastCheckin(Long attendeesId) {
+		//查詢此與會者的最後一筆簽到/退資料
+		LambdaQueryWrapper<CheckinRecord> checkinRecordWrapper = new LambdaQueryWrapper<>();
+		checkinRecordWrapper.eq(CheckinRecord::getAttendeesId, attendeesId)
+				.orderByDesc(CheckinRecord::getActionTime)
+				.last("LIMIT 1");
+		CheckinRecord checkinRecord = baseMapper.selectOne(checkinRecordWrapper);
+		if (checkinRecord == null) {
+			throw new CheckinRecordException("此與會者尚未簽到或簽退");
+		}
+
+		// 如果最後一筆資料為簽到,則刪除此筆簽到資料
+		if (checkinRecord.getActionType().equals(CheckinActionTypeEnum.CHECKIN.getValue())) {
+			baseMapper.deleteById(checkinRecord);
+			return;
+		}
+
+		throw new CheckinRecordException("最後一筆資料不是簽到行為，無法撤銷");
+
+	};
 
 	@Override
 	public void updateCheckinRecord(PutCheckinRecordDTO putCheckinRecordDTO) {
@@ -204,6 +228,6 @@ public class CheckinRecordServiceImpl extends ServiceImpl<CheckinRecordMapper, C
 
 		EasyExcel.write(response.getOutputStream(), CheckinRecordExcel.class).sheet("簽到退紀錄列表").doWrite(excelData);
 
-	};
+	}
 
 }
