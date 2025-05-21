@@ -3,6 +3,8 @@ package tw.com.ticbcs.pojo.VO;
 import java.util.List;
 import java.util.Set;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import tw.com.ticbcs.pojo.entity.CheckinRecord;
@@ -17,6 +19,9 @@ public class AttendeesTagVO {
 	
 	@Schema(description = "現在是否已簽到；預設為false,未簽到或處於簽退狀態")
 	private Boolean isCheckedIn = false;
+	
+	@Schema(description = "參與者流水序號")
+	private Integer sequenceNo;
 
 	@Schema(description = "會員資訊")
 	private Member member;
