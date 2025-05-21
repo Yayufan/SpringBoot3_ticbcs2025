@@ -9,5 +9,5 @@ public class UndoCheckinDTO {
 
 	@NotNull
 	@Schema(description = "與會者ID")
-	private final Long attendeesId;
+	private Long attendeesId;
 }
