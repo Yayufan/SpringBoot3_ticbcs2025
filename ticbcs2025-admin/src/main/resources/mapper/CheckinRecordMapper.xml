@@ -32,8 +32,8 @@
 
     <select id="selectPresenceStats" resultMap="PresenceStatsResultMap">
         SELECT
-        SUM(CASE WHEN last_action = 1 THEN 1 ELSE 0 END) AS total_onsite,
-        SUM(CASE WHEN last_action = 2 THEN 1 ELSE 0 END) AS total_left
+        COALESCE(SUM(CASE WHEN last_action = 1 THEN 1 ELSE 0 END), 0) AS total_onsite,
+        COALESCE(SUM(CASE WHEN last_action = 2 THEN 1 ELSE 0 END), 0) AS total_left
         FROM (
         SELECT
         attendees_id,
