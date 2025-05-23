@@ -243,7 +243,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	@Override
 	public void addAttendees(AddAttendeesDTO addAttendees) {
 		// TODO Auto-generated method stub
-
+		// a
 	}
 
 	@Transactional
