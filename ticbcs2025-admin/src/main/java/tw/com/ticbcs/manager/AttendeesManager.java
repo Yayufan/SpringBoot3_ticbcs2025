@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.bouncycastle.jcajce.provider.symmetric.util.BaseMac;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -38,6 +39,13 @@ public class AttendeesManager {
 	private final MemberMapper memberMapper;
 	private final AttendeesHistoryMapper attendeesHistoryMapper;
 
+	public Attendees getAttendeesByMemberId(Long memberId) {
+		LambdaQueryWrapper<Attendees> attendeesWrapper = new LambdaQueryWrapper<>();
+		attendeesWrapper.eq(Attendees::getMemberId, memberId);
+
+		return attendeesMapper.selectOne(attendeesWrapper);
+	}
+
 	/**
 	 * 獲得attendeesList對象
 	 * 
@@ -57,7 +65,7 @@ public class AttendeesManager {
 	public IPage<Attendees> getAttendeesPage(Page<Attendees> pageInfo) {
 		return attendeesMapper.selectPage(pageInfo, null);
 	}
-	
+
 	/**
 	 * 根據 memberIds 獲得 attendeesPage對象
 	 * 
@@ -65,7 +73,7 @@ public class AttendeesManager {
 	 * @param memberIds
 	 * @return
 	 */
-	public  IPage<Attendees> getAttendeesPageByMemberIds(Page<Attendees> pageInfo,Collection<Long> memberIds){
+	public IPage<Attendees> getAttendeesPageByMemberIds(Page<Attendees> pageInfo, Collection<Long> memberIds) {
 		LambdaQueryWrapper<Attendees> attendeesWrapper = new LambdaQueryWrapper<>();
 		attendeesWrapper.in(Attendees::getMemberId, memberIds);
 		Page<Attendees> attendeesPage = attendeesMapper.selectPage(pageInfo, attendeesWrapper);
@@ -180,6 +188,25 @@ public class AttendeesManager {
 
 			return vo;
 		}).collect(Collectors.toList());
+	}
+
+	/**
+	 * 透過會員ID去刪除與會者，並返回與會者ID
+	 * 
+	 * @param memberId 會員ID
+	 * @return attendeesId 被刪除的與會者ID
+	 */
+	public Long deleteAttendeesByMemberId(Long memberId) {
+
+		Attendees attendees = this.getAttendeesByMemberId(memberId);
+
+		LambdaQueryWrapper<Attendees> attendeesWrapper = new LambdaQueryWrapper<>();
+		attendeesWrapper.eq(Attendees::getMemberId, memberId);
+
+		attendeesMapper.delete(attendeesWrapper);
+
+		return attendees.getAttendeesId();
+
 	}
 
 }

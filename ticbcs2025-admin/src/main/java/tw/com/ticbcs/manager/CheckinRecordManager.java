@@ -55,7 +55,7 @@ public class CheckinRecordManager {
 		List<CheckinRecord> checkinRecordList = checkinRecordMapper.selectList(checkinRecordWrapper);
 		return checkinRecordList;
 	}
-	
+
 	/**
 	 * 根據 attendeesIds 創建與會者ID 和 簽到記錄的映射
 	 * 
@@ -63,10 +63,10 @@ public class CheckinRecordManager {
 	 * @return
 	 */
 	public Map<Long, List<CheckinRecord>> getCheckinMapByAttendeesIds(Collection<Long> attendeesIds) {
-	    List<CheckinRecord> records = this.getCheckinRecordsByAttendeesIds(attendeesIds);
-	    return records.stream().collect(Collectors.groupingBy(CheckinRecord::getAttendeesId));
+		List<CheckinRecord> records = this.getCheckinRecordsByAttendeesIds(attendeesIds);
+		return records.stream().collect(Collectors.groupingBy(CheckinRecord::getAttendeesId));
 	}
-	
+
 	/**
 	 * 透過 與會者ID 和 簽到記錄的映射，再創建一個與會者與最後簽到狀態的映射
 	 * 
@@ -74,19 +74,22 @@ public class CheckinRecordManager {
 	 * @return
 	 */
 	public Map<Long, Boolean> getCheckinStatusMap(Map<Long, List<CheckinRecord>> checkinMap) {
-		
+
 		// 預定義用來儲存與會者的簽到狀態
 		Map<Long, Boolean> statusMap = new HashMap<>();
-	    
+
 		//透過Map.entrySet, 獲取key,value 的每次遍歷值
-	    for (Map.Entry<Long, List<CheckinRecord>> entry : checkinMap.entrySet()) {
-	        CheckinRecord latest = entry.getValue().stream()
-	                .max(Comparator.comparing(CheckinRecord::getCheckinRecordId)).orElse(null);
-	        
-	        boolean isCheckedIn = latest != null && CheckinActionTypeEnum.CHECKIN.getValue().equals(latest.getActionType());
-	        statusMap.put(entry.getKey(), isCheckedIn);
-	    }
-	    return statusMap;
+		for (Map.Entry<Long, List<CheckinRecord>> entry : checkinMap.entrySet()) {
+			CheckinRecord latest = entry.getValue()
+					.stream()
+					.max(Comparator.comparing(CheckinRecord::getCheckinRecordId))
+					.orElse(null);
+
+			boolean isCheckedIn = latest != null
+					&& CheckinActionTypeEnum.CHECKIN.getValue().equals(latest.getActionType());
+			statusMap.put(entry.getKey(), isCheckedIn);
+		}
+		return statusMap;
 	}
 
 	/**
@@ -179,6 +182,18 @@ public class CheckinRecordManager {
 		checkinInfoBO.setCheckoutTime(checkoutTime);
 
 		return checkinInfoBO;
+	}
+
+	/**
+	 * 根據 attendeesId 刪除對應的與會者簽到記錄
+	 * 
+	 * @param attendeesId
+	 */
+	public void deleteCheckinRecordByAttendeesId(Long attendeesId) {
+		LambdaQueryWrapper<CheckinRecord> checkinRecordWrapper = new LambdaQueryWrapper<>();
+		checkinRecordWrapper.eq(CheckinRecord::getAttendeesId, attendeesId);
+
+		checkinRecordMapper.delete(checkinRecordWrapper);
 	}
 
 }

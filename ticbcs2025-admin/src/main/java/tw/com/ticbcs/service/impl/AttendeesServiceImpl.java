@@ -297,10 +297,17 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	}
 
+	@Transactional
 	@Override
 	public void deleteAttendees(Long attendeesId) {
+		// 刪除會員在與會者名單的狀態
 		baseMapper.deleteById(attendeesId);
+
+		// 刪除與會者的所有簽到/退紀錄
+		checkinRecordManager.deleteCheckinRecordByAttendeesId(attendeesId);
+		
 	}
+
 
 	@Override
 	public void batchDeleteAttendees(List<Long> attendeesIds) {

@@ -42,6 +42,8 @@ import tw.com.ticbcs.exception.ForgetPasswordException;
 import tw.com.ticbcs.exception.RegisteredAlreadyExistsException;
 import tw.com.ticbcs.exception.RegistrationClosedException;
 import tw.com.ticbcs.exception.RegistrationInfoException;
+import tw.com.ticbcs.manager.AttendeesManager;
+import tw.com.ticbcs.manager.CheckinRecordManager;
 import tw.com.ticbcs.mapper.MemberMapper;
 import tw.com.ticbcs.mapper.MemberTagMapper;
 import tw.com.ticbcs.mapper.OrdersMapper;
@@ -99,6 +101,8 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 
 	private final AsyncService asyncService;
 	private final AttendeesService attendeesService;
+	private final AttendeesManager attendeesManager;
+	private final CheckinRecordManager checkinRecordManager;
 	private final TagService tagService;
 	private final TagConvert tagConvert;
 
@@ -788,9 +792,15 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 
 	}
 
+	@Transactional
 	@Override
 	public void deleteMember(Long memberId) {
+		// 刪除會員自身
 		baseMapper.deleteById(memberId);
+		// 在與會者名單刪除，並獲得與會者的ID
+		Long attendeesId = attendeesManager.deleteAttendeesByMemberId(memberId);
+		// 刪除與會者的所有簽到/退紀錄
+		checkinRecordManager.deleteCheckinRecordByAttendeesId(attendeesId);
 	}
 
 	@Override
