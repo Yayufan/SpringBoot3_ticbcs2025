@@ -1,11 +1,8 @@
 package tw.com.ticbcs.service;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.springframework.core.io.ByteArrayResource;
-
-import com.google.zxing.WriterException;
 
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
 import tw.com.ticbcs.pojo.VO.AttendeesVO;
@@ -73,10 +70,7 @@ public interface AsyncService {
 	 * 
 	 * @param attendeesList
 	 * @param sendEmailDTO
-	 * @throws IOException
-	 * @throws WriterException
 	 */
-	void batchSendEmailToAttendeess(List<AttendeesVO> attendeesList, SendEmailDTO sendEmailDTO)
-			throws WriterException, IOException;
+	void batchSendEmailToAttendeess(List<AttendeesVO> attendeesList, SendEmailDTO sendEmailDTO);
 
 }

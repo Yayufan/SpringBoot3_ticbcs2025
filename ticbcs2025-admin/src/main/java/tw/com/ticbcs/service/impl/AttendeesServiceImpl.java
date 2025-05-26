@@ -181,7 +181,8 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 	@Transactional
 	@Override
-	public CheckinRecordVO walkInRegistration(WalkInRegistrationDTO walkInRegistrationDTO) {
+	public CheckinRecordVO walkInRegistration(WalkInRegistrationDTO walkInRegistrationDTO)
+			throws Exception, IOException {
 
 		// 1.創建Member對象，新增進member table
 		Member member = memberManager.addMemberOnSite(walkInRegistrationDTO);
@@ -203,9 +204,86 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		// 6. 關聯 Member 與 Tag
 		memberTagService.addMemberTag(member.getMemberId(), groupTag.getTagId());
 
-		// 7. 創建與會者 和 簽到記錄，並返回簽到時的格式
+		// 7. 創建與會者 和 簽到記錄，製作返回簽到時的格式
 		CheckinRecordVO checkinRecordVO = this.createAttendeeAndCheckin(member);
 
+		// 8.創建一個寄送QRcode的Mail給現場註冊登入的來賓
+
+		// 8-1.製作HTML信件，並帶入QRcode 生成的API在img src屬性
+		String htmlContent = """
+				<!DOCTYPE html>
+					<html >
+						<head>
+							<meta charset="UTF-8">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<title>現場登錄成功通知</title>
+							<style>
+								body { font-size: 1.2rem; line-height: 1.8; }
+								td { padding: 10px 0; }
+							</style>
+						</head>
+
+						<body >
+							<table>
+								<tr>
+					       			<td >
+					           			<img src="https://ticbcs.zfcloud.cc/_nuxt/ticbcsBanner_new.BuPR5fZA.jpg" alt="Conference Banner"  width="640" style="max-width: 100%%; width: 640px; display: block;" object-fit:cover;">
+					       			</td>
+					   			</tr>
+								<tr>
+									<td style="text-align: center;font-size:2rem;">您好，感謝您參與此次TICBCS 2025 !</td>
+								</tr>
+								<tr>
+									<td style="text-align: center;" >
+										活動當天憑下方QRcode至大會報到處，直接掃描，即可獲得小禮品並快速通關進入會場
+									</td>
+								</tr>
+								<tr>
+									<td  style="text-align: center;">
+										<img src="https://ticbcs.zfcloud.cc/prod-api/attendees/qrcode?attendeesId=%s" alt="QR Code" />
+									</td>
+								</tr>
+								<tr>
+				        			<td  style="text-align: center;">
+				            			📍 地點：中國醫藥大學水湳校區 卓越大樓B2 國際會議廳 (406台中市北屯區經貿路一段100號)<br>
+				            			📅 時間：2025年06月28日(六) 以及 2025年06月29日(日)
+				        			</td>
+				    			</tr>
+				    			<tr>
+				        			<td style="text-align: center;">
+				            			若您無法看到 QR Code，請改用 HTML 格式開啟信件，或現場向服務人員出示報名信息。
+				        			</td>
+				    			</tr>
+				    			<tr>
+				        			<td style="font-size: 0.9rem; color: #777;">
+				        				<br><br><br>
+				            			本信件由 TICBCS 大會系統自動發送，請勿直接回信
+				        			</td>
+				    			</tr>
+							</table>
+						</body>
+					</html>
+					"""
+				.formatted(checkinRecordVO.getAttendeesVO().getAttendeesId().toString());
+
+		// 8-2.製作純文字信件
+		String plainTextContent = """
+				您好，感謝您參與此次 TICBCS 2025！
+
+				活動當天請憑下方 QR Code 至大會報到處掃描，即可快速完成報到並領取小禮品。
+
+				此封信件包含您的專屬 QR Code，若您未能看到圖像，請改用 HTML 格式開啟信件，或攜帶此郵件至現場由工作人員協助查詢。
+
+				期待與您現場相見！
+
+				本信件由 TICBCS 大會系統自動發送，請勿直接回信
+				""";
+
+		// 8-5.透過異步工作去寄送郵件
+		asyncService.sendCommonEmail(member.getEmail(), "【TICBCS 2025 報到確認】現場報到用 QR Code 及活動資訊", htmlContent,
+				plainTextContent);
+
+		// 9.返回簽到的格式
 		return checkinRecordVO;
 
 	}
@@ -305,9 +383,8 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 
 		// 刪除與會者的所有簽到/退紀錄
 		checkinRecordManager.deleteCheckinRecordByAttendeesId(attendeesId);
-		
-	}
 
+	}
 
 	@Override
 	public void batchDeleteAttendees(List<Long> attendeesIds) {
@@ -546,8 +623,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 	}
 
 	@Override
-	public void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO)
-			throws WriterException, IOException {
+	public void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO) {
 
 		//從Redis中查看本日信件餘額
 		RAtomicLong quota = redissonClient.getAtomicLong(DAILY_EMAIL_QUOTA_KEY);

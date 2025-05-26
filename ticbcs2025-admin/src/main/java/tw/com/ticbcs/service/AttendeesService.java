@@ -7,7 +7,6 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.google.zxing.WriterException;
 
 import jakarta.servlet.http.HttpServletResponse;
 import tw.com.ticbcs.pojo.DTO.SendEmailDTO;
@@ -85,16 +84,17 @@ public interface AttendeesService extends IService<Attendees> {
 	 * @return
 	 */
 	AttendeesStatsVO getAttendeesStatsVO();
-	
-	
+
 	/**
 	 * 現場登記(包含註冊 - 簽到)
 	 * 
 	 * @param walkInRegistrationDTO
 	 * @return
+	 * @throws IOException
+	 * @throws Exception
 	 */
-	CheckinRecordVO walkInRegistration(WalkInRegistrationDTO walkInRegistrationDTO);
-	
+	CheckinRecordVO walkInRegistration(WalkInRegistrationDTO walkInRegistrationDTO) throws Exception, IOException;
+
 	/**
 	 * 為與會者新增/更新/刪除 複數tag
 	 * 
@@ -109,9 +109,7 @@ public interface AttendeesService extends IService<Attendees> {
 	 * 
 	 * @param tagIdList
 	 * @param sendEmailDTO
-	 * @throws IOException
-	 * @throws WriterException
 	 */
-	void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO) throws WriterException, IOException;
+	void sendEmailToAttendeess(List<Long> tagIdList, SendEmailDTO sendEmailDTO);
 
 }

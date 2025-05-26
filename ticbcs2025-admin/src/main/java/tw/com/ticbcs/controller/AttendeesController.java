@@ -172,7 +172,8 @@ public class AttendeesController {
 	@Parameters({
 			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
 	@PostMapping("on-site")
-	public R<CheckinRecordVO> walkInRegistration(@RequestBody @Valid WalkInRegistrationDTO walkInRegistrationDTO) {
+	public R<CheckinRecordVO> walkInRegistration(@RequestBody @Valid WalkInRegistrationDTO walkInRegistrationDTO)
+			throws IOException, Exception {
 		CheckinRecordVO checkinRecordVO = attendeesService.walkInRegistration(walkInRegistrationDTO);
 		return R.ok(checkinRecordVO);
 	}
@@ -209,8 +210,7 @@ public class AttendeesController {
 			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
 	@SaCheckRole("super-admin")
 	@PostMapping("send-email")
-	public R<Void> sendEmailToAttendeess(@Validated @RequestBody SendEmailByTagDTO sendEmailByTagDTO)
-			throws WriterException, IOException {
+	public R<Void> sendEmailToAttendeess(@Validated @RequestBody SendEmailByTagDTO sendEmailByTagDTO) {
 		attendeesService.sendEmailToAttendeess(sendEmailByTagDTO.getTagIdList(), sendEmailByTagDTO.getSendEmailDTO());
 		return R.ok();
 
