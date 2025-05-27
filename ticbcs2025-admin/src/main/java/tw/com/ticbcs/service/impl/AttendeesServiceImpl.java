@@ -21,6 +21,8 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -279,9 +281,18 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 				本信件由 TICBCS 大會系統自動發送，請勿直接回信
 				""";
 
-		// 8-5.透過異步工作去寄送郵件
-		asyncService.sendCommonEmail(member.getEmail(), "【TICBCS 2025 報到確認】現場報到用 QR Code 及活動資訊", htmlContent,
-				plainTextContent);
+		// 8-5.透過異步工作去寄送郵件，因為使用了事務，在事務提交後才執行寄信的異步操作，安全做法
+		// 我的是寄信返回的是void ,且沒有在異步任務中呼叫資料庫,所以沒有髒數據問題,所以原本寫法也沒問題
+		//		asyncService.sendCommonEmail(member.getEmail(), "【TICBCS 2025 報到確認】現場報到用 QR Code 及活動資訊", htmlContent,
+		//				plainTextContent);
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				asyncService.sendCommonEmail(member.getEmail(), "【TICBCS 2025 報到確認】現場報到用 QR Code 及活動資訊", htmlContent,
+						plainTextContent);
+			}
+		});
 
 		// 9.返回簽到的格式
 		return checkinRecordVO;
