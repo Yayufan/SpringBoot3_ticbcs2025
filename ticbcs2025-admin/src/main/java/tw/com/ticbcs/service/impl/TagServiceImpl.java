@@ -143,6 +143,15 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 		baseMapper.deleteById(tagId);
 	}
 
+	@Override
+	public List<Long> getMemberIdListByTagId(Long tagId) {
+		// 1. 查詢當前 tag 的所有關聯 memberTag
+		List<MemberTag> currentMemberTags = memberTagService.getMemberTagByTagId(tagId);
+		// 2. stream取出memberIdList
+		List<Long> memberIdList = currentMemberTags.stream().map(MemberTag::getMemberId).collect(Collectors.toList());
+		return memberIdList;
+	}
+
 	@Transactional
 	@Override
 	public void assignMemberToTag(List<Long> targetMemberIdList, Long tagId) {
@@ -187,6 +196,15 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 			}
 		}
 
+	}
+
+	@Override
+	public List<Long> getPaperIdListByTagId(Long tagId) {
+		// 1. 查詢當前 tag 的所有關聯 paperTag
+		List<PaperTag> paperTagList = paperTagService.getPaperTagByTagId(tagId);
+		// 2. stream取出 paperIdList
+		List<Long> paperIdList = paperTagList.stream().map(PaperTag::getPaperId).collect(Collectors.toList());
+		return paperIdList;
 	}
 
 	@Override
@@ -235,6 +253,17 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 	}
 
 	@Override
+	public List<Long> getPaperReviewerIdListByTagId(Long tagId) {
+		// 1. 查詢當前 tag 的所有關聯 paperReviewer
+		List<PaperReviewerTag> paperReviewerTagList = paperReviewerTagService.getPaperReviewerTagByTagId(tagId);
+		// 2. stream取出 paperReviewerIdList
+		List<Long> paperReviewerIdList = paperReviewerTagList.stream()
+				.map(PaperReviewerTag::getPaperReviewerId)
+				.collect(Collectors.toList());
+		return paperReviewerIdList;
+	}
+
+	@Override
 	public void assignPaperReviewerToTag(List<Long> targetPaperReviewerIdList, Long tagId) {
 
 		// 1. 查詢當前 tag 的所有關聯 paperReviewer
@@ -278,6 +307,17 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 			}
 		}
 
+	}
+
+	@Override
+	public List<Long> getAttendeesIdListByTagId(Long tagId) {
+		// 1. 查詢當前 tag 的所有關聯 attendeesTag
+		List<AttendeesTag> attendeesTagList = attendeesTagService.getAttendeesTagByTagId(tagId);
+		// 2. stream取出 attendeesIdList
+		List<Long> attendeesIdList = attendeesTagList.stream()
+				.map(AttendeesTag::getAttendeesId)
+				.collect(Collectors.toList());
+		return attendeesIdList;
 	}
 
 	@Override
@@ -345,7 +385,6 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 		String tagType = "attendees";
 		String tagName = String.format("A-group-%02d", groupIndex);
 		Tag tag = this.getTagByTypeAndName(tagType, tagName);
-		
 
 		if (tag != null)
 			return tag;
@@ -353,9 +392,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 		String color = TagColorUtil.adjustColor("#001F54", groupIndex, 5);
 		String desc = "與會者分組標籤 (第 " + groupIndex + " 組)";
 		return this.createTag(tagType, tagName, desc, color);
-		
+
 	}
-	
+
 	private Tag createTag(String type, String name, String description, String color) {
 		Tag tag = new Tag();
 		tag.setType(type);
@@ -366,6 +405,5 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 		baseMapper.insert(tag);
 		return tag;
 	}
-
 
 }

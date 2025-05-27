@@ -111,6 +111,14 @@ public interface TagService extends IService<Tag> {
 	void deleteTag(Long tagId);
 
 	/**
+	 * 根據標籤ID 返回memberIdList
+	 * 
+	 * @param tagId
+	 * @return
+	 */
+	List<Long> getMemberIdListByTagId(Long tagId); 
+	
+	/**
 	 * 為複數member 添加/更新/刪除 tag
 	 * 
 	 * @param memberIdList
@@ -118,6 +126,15 @@ public interface TagService extends IService<Tag> {
 	 */
 	void assignMemberToTag(List<Long> targetMemberIdList, Long tagId);
 
+	
+	/**
+	 * 根據標籤ID 返回paperIdList
+	 * 
+	 * @param tagId
+	 * @return
+	 */
+	List<Long> getPaperIdListByTagId(Long tagId); 
+	
 	/**
 	 * 為複數paper 添加/更新/刪除 tag
 	 * 
@@ -126,6 +143,17 @@ public interface TagService extends IService<Tag> {
 	 */
 	void assignPaperToTag(List<Long> targetPaperIdList, Long tagId);
 
+	
+	
+	/**
+	 * 根據標籤ID 返回paperReviewerIdList
+	 * 
+	 * @param tagId
+	 * @return
+	 */
+	List<Long> getPaperReviewerIdListByTagId(Long tagId); 
+	
+	
 	/**
 	 * 為複數paperReviewer 添加/更新/刪除 tag
 	 * 
@@ -134,6 +162,14 @@ public interface TagService extends IService<Tag> {
 	 */
 	void assignPaperReviewerToTag(List<Long> targetPaperReviewerIdList, Long tagId);
 
+	/**
+	 * 根據標籤ID 返回attendeesIdList
+	 * 
+	 * @param tagId
+	 * @return
+	 */
+	List<Long> getAttendeesIdListByTagId(Long tagId); 
+	
 	/**
 	 * 為複數attendees 添加/更新/刪除 tag
 	 * 
