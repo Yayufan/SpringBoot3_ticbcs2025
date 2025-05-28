@@ -1,6 +1,7 @@
 package tw.com.ticbcs.service.impl;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -47,6 +48,10 @@ public class AsyncServiceImpl implements AsyncService {
 
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+			// 當使用SMTP中繼時,可以在SPF + DKIM + DMARC 驗證通過的domain 使用自己的domain
+			// 可以跟brevo 的 smtp Server不一樣
+//			helper.setFrom("zhongfu-amts@zhongfu-pr.com.tw","TICBCS 大會系統");
+			
 			helper.setTo(to);
 			helper.setSubject(subject);
 			//			helper.setText(plainTextContent, false); // 纯文本版本

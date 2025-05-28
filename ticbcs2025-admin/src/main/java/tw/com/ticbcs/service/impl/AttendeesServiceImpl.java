@@ -267,6 +267,7 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 					</html>
 					"""
 				.formatted(checkinRecordVO.getAttendeesVO().getAttendeesId().toString());
+		
 
 		// 8-2.製作純文字信件
 		String plainTextContent = """
