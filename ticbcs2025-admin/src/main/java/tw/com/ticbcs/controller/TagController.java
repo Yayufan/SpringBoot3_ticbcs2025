@@ -129,7 +129,6 @@ public class TagController {
 
 	}
 	
-	
 	@Operation(summary = "根據標籤ID 返回paperIdList")
 	@Parameters({
 			@Parameter(name = "Authorization", description = "請求頭token,token-value開頭必須為Bearer ", required = true, in = ParameterIn.HEADER) })
