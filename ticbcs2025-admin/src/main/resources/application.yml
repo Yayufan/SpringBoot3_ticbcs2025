@@ -36,7 +36,7 @@ spring:
 
   mail:
     host: smtp.gmail.com
-    #host: smtp-relay.brevo.com
+    # host: smtp-relay.brevo.com
     port: 587
     username: ticbcsamt@gmail.com
     # username: 8e0524002@smtp-brevo.com
