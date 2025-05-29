@@ -35,7 +35,6 @@ public interface AttendeesTagService extends IService<AttendeesTag> {
 	 */
 	Map<Long, List<Long>> getAttendeesTagMapByAttendeesIds(Collection<Long> attendeesIds);
 	
-	
 	/**
 	 * 根據 tagId 查詢與之有關的所有Attendees關聯
 	 * 
