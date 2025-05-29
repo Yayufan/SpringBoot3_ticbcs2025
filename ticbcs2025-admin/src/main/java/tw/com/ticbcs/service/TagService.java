@@ -144,7 +144,6 @@ public interface TagService extends IService<Tag> {
 	void assignPaperToTag(List<Long> targetPaperIdList, Long tagId);
 
 	
-	
 	/**
 	 * 根據標籤ID 返回paperReviewerIdList
 	 * 
