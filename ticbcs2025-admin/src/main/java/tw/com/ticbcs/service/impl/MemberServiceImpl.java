@@ -511,75 +511,75 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 		}
 
 		String htmlContent = """
-							<!DOCTYPE html>
-								<html >
-									<head>
-										<meta charset="UTF-8">
-										<meta name="viewport" content="width=device-width, initial-scale=1.0">
-										<title>報名成功通知</title>
-										<style>
-											body { font-size: 1.2rem; line-height: 1.8; }
-											td { padding: 10px 0; }
-										</style>
-									</head>
+				<!DOCTYPE html>
+					<html >
+						<head>
+							<meta charset="UTF-8">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<title>報名成功通知</title>
+							<style>
+								body { font-size: 1.2rem; line-height: 1.8; }
+								td { padding: 10px 0; }
+							</style>
+						</head>
 
-									<body >
-										<table style="width:660px;" >
+						<body >
+							<table style="width:660px;" >
+								<tr>
+					       			<td >
+					           			<img src="https://ticbcs.zfcloud.cc/_nuxt/ticbcsBanner_new.BuPR5fZA.jpg" alt="Conference Banner"  style="width:100%%;  object-fit:cover;">
+					       			</td>
+					   			</tr>
+								<tr>
+				    							<td style="padding: 20px 0; font-size: 20px; font-weight: bold; text-align: center;">
+				      						歡迎參加 2025 TICBCS !
+				    							</td>
+				  						</tr>
+								<tr>
+				  							<td class="content">
+				    								<p>親愛的 <strong>%s</strong> 您好，</p>
+				    								<p>感謝您報名參加 <strong>TICBCS 2025 台中國際乳癌研討會</strong>。我們已成功收到您的報名資訊，敬請留意以下細節：</p>
+
+				    								<p>您的報名資料：</p>
+
+				    								<ul>
+				    									<li>姓名：%s</li>
+				    									<li>所屬機構：%s</li>
+				    									<li>職稱：%s</li>
+				    									<li>聯絡電話：%s</li>
+										</ul>
+
+				    								<p>會議簡介：</p>
+				   								<p style="padding-left:40px;" >
+				      								本研討會源自中華民國乳癌教育暨防治學會所辦之國際研討會，致力於推動乳癌防治教育與學術交流。在中國醫藥大學附設醫院以及中國醫藥大學洪明奇校長的支持下，TICBCS 已成為中部地區代表性國際會議。
+				    								</p>
+				    								<p style="padding-left:40px;" >
+				      								2025 年會著重於基礎醫學研究與臨床治療新知，邀請國內外重量級學者分享頂尖研究與實務經驗，今年度另設護理師與個管師工作坊，旨在提升醫療團隊之合作運作效率，促進跨領域交流與學習。
+				    								</p>
+
+				    								<p>活動資訊：</p>
+				    								<ul>
+				      								<li><strong>📍 地點：</strong>中國醫藥大學水湳校區 卓越大樓 B2 國際會議廳</li>
+				      								<li><strong>🗺 地址：</strong>台中市北屯區經貿路一段 100 號</li>
+				      								<li><strong>📅 日期：</strong>2025 年 6 月 28 日（六）與 6 月 29 日（日）</li>
+				    								</ul>
+
+				    								<p>聯絡資訊：</p>
+				    								<p style="padding-left:40px;">
+				      								若有任何疑問，歡迎來信聯絡主辦單位：<a href="mailto:twbc.prevention@gmail.com">twbc.prevention@gmail.com</a>
+				   								</p>
+				  							</td>
+
+											</tr>
 											<tr>
-								       			<td >
-								           			<img src="https://ticbcs.zfcloud.cc/_nuxt/ticbcsBanner_new.BuPR5fZA.jpg" alt="Conference Banner"  style="width:100%%;  object-fit:cover;">
-								       			</td>
-								   			</tr>
-											<tr>
-				       							<td style="padding: 20px 0; font-size: 20px; font-weight: bold; text-align: center;">
-							      						歡迎參加 2025 TICBCS !
-				       							</td>
-				     						</tr>
-											<tr>
-				     							<td class="content">
-				       								<p>親愛的 <strong>%s</strong> 您好，</p>
-				       								<p>感謝您報名參加 <strong>TICBCS 2025 台中國際乳癌研討會</strong>。我們已成功收到您的報名資訊，敬請留意以下細節：</p>
-
-				       								<p>您的報名資料：</p>
-				       							
-				       								<ul>
-				       									<li>姓名：%s</li>
-				       									<li>所屬機構：%s</li>
-				       									<li>職稱：%s</li>
-				       									<li>聯絡電話：%s</li>
-													</ul>
-												
-				       								<p>會議簡介：</p>
-				      								<p style="padding-left:40px;" >
-				         								本研討會源自中華民國乳癌教育暨防治學會所辦之國際研討會，致力於推動乳癌防治教育與學術交流。在中國醫藥大學附設醫院以及中國醫藥大學洪明奇校長的支持下，TICBCS 已成為中部地區代表性國際會議。
-				       								</p>
-				       								<p style="padding-left:40px;" >
-				         								2025 年會著重於基礎醫學研究與臨床治療新知，邀請國內外重量級學者分享頂尖研究與實務經驗，今年度另設護理師與個管師工作坊，旨在提升醫療團隊之合作運作效率，促進跨領域交流與學習。
-				       								</p>
-
-				       								<p>活動資訊：</p>
-				       								<ul>
-				         								<li><strong>📍 地點：</strong>中國醫藥大學水湳校區 卓越大樓 B2 國際會議廳</li>
-				         								<li><strong>🗺 地址：</strong>台中市北屯區經貿路一段 100 號</li>
-				         								<li><strong>📅 日期：</strong>2025 年 6 月 28 日（六）與 6 月 29 日（日）</li>
-				       								</ul>
-
-				       								<p>聯絡資訊：</p>
-				       								<p style="padding-left:40px;">
-				         								若有任何疑問，歡迎來信聯絡主辦單位：<a href="mailto:twbc.prevention@gmail.com">twbc.prevention@gmail.com</a>
-				      								</p>
-				     							</td>
-				     							
-				   							</tr>
-				   							<tr>
-				     							<td>
-				       							本信件由 TICBCS 系統自動發送，請勿直接回覆。
-				     							</td>
-				   							</tr>
-										</table>
-									</body>
-								</html>
-							"""
+				  							<td>
+				    							本信件由 TICBCS 系統自動發送，請勿直接回覆。
+				  							</td>
+											</tr>
+							</table>
+						</body>
+					</html>
+				"""
 				.formatted(addMemberDTO.getChineseName(), addMemberDTO.getChineseName(), addMemberDTO.getAffiliation(),
 						addMemberDTO.getJobTitle(), addMemberDTO.getPhone());
 
@@ -817,12 +817,18 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 	@Transactional
 	@Override
 	public void deleteMember(Long memberId) {
-		// 刪除會員自身
-		baseMapper.deleteById(memberId);
+
 		// 在與會者名單刪除，並獲得與會者的ID
 		Long attendeesId = attendeesManager.deleteAttendeesByMemberId(memberId);
-		// 刪除與會者的所有簽到/退紀錄
-		checkinRecordManager.deleteCheckinRecordByAttendeesId(attendeesId);
+
+		//如果會員不在與會者名單就直接返回了
+		if (attendeesId != null) {
+			checkinRecordManager.deleteCheckinRecordByAttendeesId(attendeesId);
+		}
+
+		// 最後刪除會員自身
+		baseMapper.deleteById(memberId);
+
 	}
 
 	@Override

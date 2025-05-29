@@ -198,11 +198,14 @@ public class AttendeesManager {
 	public Long deleteAttendeesByMemberId(Long memberId) {
 
 		Attendees attendees = this.getAttendeesByMemberId(memberId);
+		
+		//如果這個會員還不是與會者,則直接返回null
+		if (attendees == null) {
+			return null;
+		}
 
-		LambdaQueryWrapper<Attendees> attendeesWrapper = new LambdaQueryWrapper<>();
-		attendeesWrapper.eq(Attendees::getMemberId, memberId);
-
-		attendeesMapper.delete(attendeesWrapper);
+		// 不為null,刪除與會者
+		attendeesMapper.deleteById(attendees);
 
 		return attendees.getAttendeesId();
 
