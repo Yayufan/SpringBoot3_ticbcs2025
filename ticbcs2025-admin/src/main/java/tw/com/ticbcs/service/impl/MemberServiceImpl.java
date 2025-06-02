@@ -589,7 +589,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 				+ "若有任何問題，歡迎隨時與我們聯繫。我們期待與您會面！";
 
 		// 透過異步工作去寄送郵件
-		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "【TICBCS 2025 完成報名】報名資訊與報到方式", htmlContent,
+		asyncService.sendCommonEmail(addMemberDTO.getEmail(), "TICBCS 2025: 您的報名已完成", htmlContent,
 				plainTextContent);
 
 		//----------------------------------------------------
