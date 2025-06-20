@@ -287,13 +287,13 @@ public class AttendeesServiceImpl extends ServiceImpl<AttendeesMapper, Attendees
 		//		asyncService.sendCommonEmail(member.getEmail(), "【TICBCS 2025 報到確認】現場報到用 QR Code 及活動資訊", htmlContent,
 		//				plainTextContent);
 
-		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-			@Override
-			public void afterCommit() {
-				asyncService.sendCommonEmail(member.getEmail(), "【TICBCS 2025 報到確認】現場報到用 QR Code 及活動資訊", htmlContent,
-						plainTextContent);
-			}
-		});
+//		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+//			@Override
+//			public void afterCommit() {
+//				asyncService.sendCommonEmail(member.getEmail(), "【TICBCS 2025 報到確認】現場報到用 QR Code 及活動資訊", htmlContent,
+//						plainTextContent);
+//			}
+//		});
 
 		// 9.返回簽到的格式
 		return checkinRecordVO;
