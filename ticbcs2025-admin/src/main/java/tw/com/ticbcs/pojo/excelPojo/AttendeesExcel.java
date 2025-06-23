@@ -84,6 +84,9 @@ public class AttendeesExcel {
 	@ExcelProperty("主報名者(master),子報名者(slave)")
 	private String groupRole;
 	
+	@ExcelProperty("格式化流水號")
+	private String sequenceNo;
+	
 	@ExcelProperty(value = "簽到QRCode")
 	private byte[] QRcodeImage;
 
