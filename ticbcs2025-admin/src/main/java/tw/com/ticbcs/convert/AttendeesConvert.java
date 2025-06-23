@@ -18,8 +18,10 @@ public interface AttendeesConvert {
 
 	// Attendees putDTOToEntity(PutAttendeesDTO putAttendeesDTO);
 
+	@Mapping(source = "sequenceNo", target = "sequenceNo", qualifiedByName = "convertInteger2FormatString")
 	AttendeesVO entityToVO(Attendees attendees);
 
+	@Mapping(source = "sequenceNo", target = "sequenceNo", qualifiedByName = "convertInteger2FormatString")
 	AttendeesTagVO entityToAttendeesTagVO(Attendees attendees);
 
 	@Mapping(source = "attendeesId", target = "attendeesId", qualifiedByName = "convertLongToString")
@@ -42,7 +44,6 @@ public interface AttendeesConvert {
 	@Mapping(source = "member.foodTaboo", target = "foodTaboo")
 	@Mapping(source = "member.category", target = "category", qualifiedByName = "convertCategory")
 	@Mapping(source = "member.categoryExtra", target = "categoryExtra")
-	@Mapping(source = "sequenceNo", target = "sequenceNo", qualifiedByName = "convertInteger2FormatString")
 	AttendeesExcel voToExcel(AttendeesVO attendeesVO);
 
 	@Named("convertCategory")
